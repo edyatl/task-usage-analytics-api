@@ -1,0 +1,36 @@
+# Use the latest stable Python image
+FROM python:3.14-slim
+
+# Define build arguments for user and group IDs
+ARG UID
+ARG GID
+ENV USERNAME=appuser
+ENV GROUPNAME=appgroup
+ENV WORKDIR=/home/appuser/app
+
+# Create group and user only if they don't already exist
+RUN if ! getent group ${GID} >/dev/null; then groupadd -g ${GID} ${GROUPNAME}; fi && \
+    if ! id -u ${UID} >/dev/null 2>&1; then useradd -m -u ${UID} -g ${GID} ${USERNAME}; fi
+
+# Create a working directory and set permissions
+RUN mkdir -p ${WORKDIR} && \
+    if ! id -u ${UID} >/dev/null 2>&1; then chown -R ${USERNAME}:${GROUPNAME} ${WORKDIR}; fi
+
+# Set working directory in the container
+WORKDIR ${WORKDIR}
+
+# Copy the requirements file to the container
+COPY requirements.txt ./api/
+
+# Install Python dependencies
+RUN pip install --no-cache-dir -r ./api/requirements.txt
+
+# Copy the application source code
+#COPY . .
+
+# Switch to the non-root user
+USER ${UID}:${GID}
+
+# Command to run the Celery worker
+CMD ["celery", "-A", "your_project_name", "worker", "--loglevel=info"]
+
