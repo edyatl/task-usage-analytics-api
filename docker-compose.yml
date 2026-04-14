@@ -137,6 +137,8 @@ volumes:
     driver: local
   usage-stats-pgdata:
     driver: local
+  prisma-node-modules:
+    driver: local
 
 networks:
   default:
