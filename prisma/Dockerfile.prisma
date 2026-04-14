@@ -1,16 +1,32 @@
 FROM node:22-alpine
 
-WORKDIR /app
-
-COPY prisma/package.json prisma/package-lock.json* ./prisma/
-WORKDIR /app/prisma
-RUN npm ci 
-
-COPY prisma/ ./
-
-RUN npx prisma generate
+# System deps (openssl needed by Prisma)
+RUN apk add --no-cache openssl
 
 WORKDIR /app
 
-CMD ["sh"]
+
+# Install dependencies first (better caching)
+COPY package.json package-lock.json* ./
+RUN npm install
+#COPY prisma/package.json prisma/package-lock.json* ./prisma/
+#WORKDIR /app/prisma
+#RUN npm ci 
+
+# Copy Prisma files only (avoid copying node_modules from host)
+COPY prisma.config.ts ./
+COPY schema.prisma ./
+#COPY prisma/ ./
+
+#RUN npx prisma generate
+
+#WORKDIR /app
+
+#CMD ["sh"]
+
+# Create migrations dir (important for volume mount)
+RUN mkdir -p /app/migrations
+
+# Default command (can be overridden by docker-compose)
+CMD ["npx", "prisma", "migrate", "deploy"]
 

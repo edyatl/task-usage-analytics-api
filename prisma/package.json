@@ -1,0 +1,13 @@
+{
+  "name": "prisma-tools",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@prisma/client": "^7.6.0"
+  },
+  "devDependencies": {
+    "prisma": "^7.6.0",
+    "tsx": "^4.20.6",
+    "typescript": "^5.8.3"
+  }
+}
