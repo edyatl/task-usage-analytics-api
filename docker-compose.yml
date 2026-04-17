@@ -4,7 +4,6 @@ services:
   api:
     build:
       context: ./api
-      network: host
       dockerfile: Dockerfile.api
       args:
         UID: ${UID:-1000}
@@ -86,7 +85,6 @@ services:
   celery:
     build:
       context: ./api
-      network: host
       dockerfile: Dockerfile.celery
       args:
         UID: ${UID:-1000}
@@ -109,7 +107,6 @@ services:
   celery-beat:
     build:
       context: ./api
-      network: host
       dockerfile: Dockerfile.celery
       args:
         UID: ${UID:-1000}
@@ -143,4 +140,3 @@ volumes:
 networks:
   default:
     name: usage-stats-api-network
- 
