@@ -1,4 +1,4 @@
-version: "3.9"
+#version: "3.9"
 
 services:
   api:
@@ -21,12 +21,34 @@ services:
       - .:/home/appuser/app  # Mount current directory into the container
     working_dir: /home/appuser/app
     depends_on:
-      - db
-      - redis
+      codegen:
+        condition: service_completed_successfully
+      redis:
+        condition: service_started
     restart: unless-stopped
     user: "${UID}:${GID}"  # Use host's current UID and GID
     #command: uvicorn api.main:app --host 0.0.0.0 --port 8000 --log-level error
     command: gunicorn -w 2 -k uvicorn.workers.UvicornWorker -b 0.0.0.0:8000 --timeout 120 api.main:app
+
+  codegen:
+    build:
+      context: ./api
+      dockerfile: Dockerfile.api
+    container_name: codegen-container
+    working_dir: /home/appuser/app
+    volumes:
+      - .:/home/appuser/app
+    depends_on:
+      prisma-migrate:
+        condition: service_completed_successfully
+    environment:
+      DATABASE_URL: postgresql+psycopg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
+    command: >
+      sh -c "
+      echo 'Generating SQLAlchemy models...' &&
+      sqlacodegen postgresql+psycopg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB} > /home/appuser/app/api/models.py &&
+      echo 'Models generated'
+      "
 
   client:
     image: nginx:alpine  # Temporary stub
@@ -53,9 +75,9 @@ services:
     command: >
       sh -c "
       echo 'Waiting for database...' &&
-      sleep 5 &&
-      npx prisma migrate deploy || echo 'No migrations yet' &&
-      tail -f /dev/null
+      pg_isready -h db -U ${POSTGRES_USER} &&
+      npx prisma migrate deploy &&
+      echo 'Migrations completed' || echo 'No migrations yet'
       "
 
   db:
