@@ -6,6 +6,7 @@
 
 """
 from pydantic import BaseModel
+from api.usage.stats_schemas import UsageStats
 
 class ExampleSchema(BaseModel):
     name: str
