@@ -5,7 +5,7 @@
     https://github.com/edyatl
 
 """
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta
 from typing import List
 import sqlalchemy as sa
 from sqlmodel import select
