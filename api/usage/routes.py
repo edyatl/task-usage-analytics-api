@@ -6,10 +6,10 @@ from api.usage.stats_schemas import UsageStats
 from api.auth import get_current_user
 from api.db import get_session
 
-router = APIRouter(prefix="/api/usage", tags=["usage"])
+usage_router = APIRouter(prefix="/api/usage", tags=["usage"])
 
 
-@router.get("/stats")
+@usage_router.get("/stats")
 async def get_usage_stats(
     days: Annotated[int | None, Query(None, ge=1, le=90)],
     user: dict = Depends(get_current_user),
