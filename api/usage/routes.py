@@ -11,7 +11,7 @@ usage_router = APIRouter(prefix="/api/usage", tags=["usage"])
 
 @usage_router.get("/stats")
 async def get_usage_stats(
-    days: Annotated[int | None, Query(None, ge=1, le=90)],
+    days: int | None = None,
     user: dict = Depends(get_current_user),
     session = Depends(get_session)
 ):
