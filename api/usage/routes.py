@@ -16,5 +16,5 @@ async def get_usage_stats(
     session = Depends(get_session)
 ):
     usage_service = UsageService()
-    usage_stats = await usage_service.get_usage_stats(user["id"], days)
+    usage_stats = await usage_service.get_usage_stats(user.id, days)
     return usage_stats
