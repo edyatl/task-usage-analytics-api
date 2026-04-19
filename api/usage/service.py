@@ -29,7 +29,12 @@ class UsageService:
     def __init__(self):
         self.logger = get_cls_logger(self.__class__.__name__)
 
-    async def get_usage_stats(self, user_id: int, days: int | None = None) -> UsageStats:
+    async def get_usage_stats(
+        self, 
+        user_id: int, 
+        days: int | None = None, 
+        session: AsyncSession = Depends(get_session)
+    ) -> UsageStats:
         """Get usage statistics for a given user."""
         
         # Validate input
@@ -44,45 +49,43 @@ class UsageService:
         date_from = date_to - timedelta(days=days - 1)
 
         # Fetch user plan (one cheap query)
-        async with get_session() as session:
-            user = await session.execute(select(Users).where(Users.id == user_id))
-            user = user.scalar()
-            if user is None:
-                self.logger.warning(f"User {user_id} not found")
-                return UsageStats(
-                    plan="unknown",
-                    daily_limit=30,
-                    period={"from": str(date_from), "to": str(date_to)},
-                    days=[],
-                    summary=SummaryStats(
-                        total_committed=0,
-                        avg_daily=0,
-                        peak_day=PeakDay(date=str(date_to), count=0),
-                        current_streak=0
-                    )
+        user = await session.execute(select(Users).where(Users.id == user_id))
+        user = user.scalar()
+        if user is None:
+            self.logger.warning(f"User {user_id} not found")
+            return UsageStats(
+                plan="unknown",
+                daily_limit=30,
+                period={"from": str(date_from), "to": str(date_to)},
+                days=[],
+                summary=SummaryStats(
+                    total_committed=0,
+                    avg_daily=0,
+                    peak_day=PeakDay(date=str(date_to), count=0),
+                    current_streak=0
                 )
-            plan_tier = user.plan_tier
-            daily_limit = settings.TARIFF_MAP.get(plan_tier, 30)
+            )
+        plan_tier = user.plan_tier
+        daily_limit = settings.TARIFF_MAP.get(plan_tier, 30)
 
         # Single optimized aggregation query
-        async with get_session() as session:
-            query = select(
-                func.generate_series(date_from, date_to, '1 day').label('date'),
-                func.coalesce(func.sum(func.case((DailyUsageEvents.committed_at.is_not(None), 1), else_=0)), 0).label('committed'),
-                func.coalesce(func.sum(func.case((DailyUsageEvents.committed_at.is_(None), 1), else_=0)), 0).label('reserved')
-            ).select_from(
-                func.generate_series(date_from, date_to, '1 day').cte('dates')
-            ).outerjoin(
-                DailyUsageEvents,
-                sa.and_(
-                    DailyUsageEvents.date_key == func.generate_series(date_from, date_to, '1 day').c.date,
-                    DailyUsageEvents.user_id == user_id
-                )
-            ).group_by(
-                func.generate_series(date_from, date_to, '1 day').c.date
+        query = select(
+            func.generate_series(date_from, date_to, '1 day').label('date'),
+            func.coalesce(func.sum(func.case((DailyUsageEvents.committed_at.is_not(None), 1), else_=0)), 0).label('committed'),
+            func.coalesce(func.sum(func.case((DailyUsageEvents.committed_at.is_(None), 1), else_=0)), 0).label('reserved')
+        ).select_from(
+            func.generate_series(date_from, date_to, '1 day').cte('dates')
+        ).outerjoin(
+            DailyUsageEvents,
+            sa.and_(
+                DailyUsageEvents.date_key == func.generate_series(date_from, date_to, '1 day').c.date,
+                DailyUsageEvents.user_id == user_id
             )
-            results = await session.execute(query)
-            results = results.all()
+        ).group_by(
+            func.generate_series(date_from, date_to, '1 day').c.date
+        )
+        results = await session.execute(query)
+        results = results.all()
 
         # Build days[] list
         days_list = []
