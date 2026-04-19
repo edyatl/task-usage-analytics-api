@@ -11,8 +11,7 @@ import sqlalchemy as sa
 from sqlmodel import select
 from sqlalchemy import func
 from fastapi import Depends
-from api.db import AsyncSession
-
+from api.db import AsyncSession, get_session
 from api.logger import get_cls_logger
 from api.config import config as settings
 from api.models import Users, DailyUsageEvents   # SQLModel models
