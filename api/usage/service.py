@@ -14,7 +14,7 @@ from sqlalchemy import func
 from api.logger import get_cls_logger
 from api.db import get_session
 from api.config import config as settings
-from api.models import User, DailyUsageEvent   # SQLModel models
+from api.models import Users, DailyUsageEvents   # SQLModel models
 from api.usage.schemas import UsageStats   # Final response schema
 from api.usage.stats_schemas import (           # All intermediate schemas
     DayStats,
@@ -45,7 +45,7 @@ class UsageService:
 
         # Fetch user plan (one cheap query)
         async with get_session() as session:
-            user = await session.execute(select(User).where(User.id == user_id))
+            user = await session.execute(select(Users).where(Users.id == user_id))
             user = user.scalar()
             if user is None:
                 self.logger.warning(f"User {user_id} not found")
@@ -68,15 +68,15 @@ class UsageService:
         async with get_session() as session:
             query = select(
                 func.generate_series(date_from, date_to, '1 day').label('date'),
-                func.coalesce(func.sum(func.case((DailyUsageEvent.committed_at.is_not(None), 1), else_=0)), 0).label('committed'),
-                func.coalesce(func.sum(func.case((DailyUsageEvent.committed_at.is_(None), 1), else_=0)), 0).label('reserved')
+                func.coalesce(func.sum(func.case((DailyUsageEvents.committed_at.is_not(None), 1), else_=0)), 0).label('committed'),
+                func.coalesce(func.sum(func.case((DailyUsageEvents.committed_at.is_(None), 1), else_=0)), 0).label('reserved')
             ).select_from(
                 func.generate_series(date_from, date_to, '1 day').cte('dates')
             ).outerjoin(
-                DailyUsageEvent,
+                DailyUsageEvents,
                 sa.and_(
-                    DailyUsageEvent.date_key == func.generate_series(date_from, date_to, '1 day').c.date,
-                    DailyUsageEvent.user_id == user_id
+                    DailyUsageEvents.date_key == func.generate_series(date_from, date_to, '1 day').c.date,
+                    DailyUsageEvents.user_id == user_id
                 )
             ).group_by(
                 func.generate_series(date_from, date_to, '1 day').c.date
