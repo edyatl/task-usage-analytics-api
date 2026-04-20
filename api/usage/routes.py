@@ -10,7 +10,11 @@ from api.models import Users
 usage_router = APIRouter()
 
 
-@usage_router.get("/stats", response_model=UsageStats)
+@usage_router.get(
+    "/stats", 
+    response_model=UsageStats,
+    summary="Compute usage statistics for a single user over a rolling date window."
+)
 async def get_usage_stats(
     days: int | None = None,
     user: Users = Depends(get_current_user),
