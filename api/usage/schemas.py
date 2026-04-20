@@ -26,9 +26,13 @@ class SummaryStats(BaseModel):
     peak_day: PeakDay
     current_streak: int
 
+class Period(BaseModel):
+    from_date: str
+    to_date: str
+
 class UsageStats(BaseModel):
     plan: str
     daily_limit: int
-    period: dict
+    period: Period
     days: List[DayStats]
     summary: SummaryStats
