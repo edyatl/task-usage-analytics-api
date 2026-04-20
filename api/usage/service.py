@@ -16,7 +16,7 @@ from api.config import config as settings
 from api.db import AsyncSession
 from api.logger import get_cls_logger
 from api.models import DailyUsageEvents, Users
-from api.usage.schemas import UsageStats, DayStats, SummaryStats, PeakDay
+from api.usage.schemas import UsageStats, DayStats, SummaryStats, PeakDay, Period
 
 _DEFAULT_DAILY_LIMIT: int = 30
 _MIN_DAYS: int = 1
@@ -73,7 +73,7 @@ class UsageService:
         return UsageStats(
             plan=plan_tier,
             daily_limit=daily_limit,
-            period={"from": str(date_from), "to": str(date_to)},
+            period=Period(from_date=str(date_from), to_date=str(date_to)),
             days=days_list,
             summary=summary,
         )
