@@ -16,8 +16,7 @@ from api.config import config as settings
 from api.db import AsyncSession
 from api.logger import get_cls_logger
 from api.models import DailyUsageEvents, Users
-from api.usage.schemas import UsageStats
-from api.usage.stats_schemas import DayStats, PeakDay, SummaryStats
+from api.usage.schemas import UsageStats, DayStats, SummaryStats, PeakDay
 
 _DEFAULT_DAILY_LIMIT: int = 30
 _MIN_DAYS: int = 1
@@ -164,7 +163,7 @@ class UsageService:
             .outerjoin(
                 DailyUsageEvents,
                 sa.and_(
-                    DailyUsageEvents.date_key == date_key_expr,   # VARCHAR = TEXT ✓
+                    DailyUsageEvents.date_key == date_key_expr,   # VARCHAR = TEXT 
                     DailyUsageEvents.user_id == user_id,
                 ),
             )
