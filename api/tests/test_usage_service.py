@@ -9,8 +9,8 @@ import pytest
 from unittest.mock import Mock
 from datetime import date, datetime, timedelta
 from pytest_asyncio import fixture
-from ..usage.service import UsageService
-from ..db import AsyncSession
+from api.usage.service import UsageService
+from api.db import AsyncSession
 
 # Fixture for mocked UsageService
 @fixture
