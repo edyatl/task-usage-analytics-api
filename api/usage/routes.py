@@ -6,7 +6,7 @@ from api.usage.stats_schemas import UsageStats
 from api.auth import get_current_user
 from api.db import get_session
 
-usage_router = APIRouter(prefix="/api/usage", tags=["usage"])
+usage_router = APIRouter(prefix="/usage", tags=["usage"])
 
 
 @usage_router.get("/stats")
@@ -16,5 +16,5 @@ async def get_usage_stats(
     session = Depends(get_session)
 ):
     usage_service = UsageService()
-    usage_stats = await usage_service.get_usage_stats(user.id, days)
+    usage_stats = await usage_service.get_usage_stats(user.id, session, days)
     return usage_stats
