@@ -7,7 +7,7 @@
 """
 import pytest
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
-from datetime import date
+from datetime import date, datetime, timedelta
 from types import SimpleNamespace
 
 import pytest_asyncio
@@ -107,3 +107,38 @@ class TestUsageService:
         assert days_list[0].committed == 5
         assert days_list[0].reserved == 3
         assert days_list[0].utilization == pytest.approx(0.5, rel=1e-4)
+
+    @pytest.mark.asyncio
+    async def test_expired_reserved_events_are_excluded(self, mock_session):
+        """Reserved events older than 15 minutes should NOT be counted in the `reserved` field."""
+
+        user_id = 1
+        daily_limit = 10
+        date_from = date(2024, 1, 1)
+        date_to = date(2024, 1, 1)
+
+        # Create test data with fresh and expired reserved events
+        now = datetime.now()
+        fresh_reserved_event = _make_row(date(2024, 1, 1), committed=0, reserved=3)
+        expired_reserved_event = _make_row(date(2024, 1, 1), committed=0, reserved=2)
+
+        # Set the timestamp of the expired event to be older than 15 minutes
+        expired_reserved_event_timestamp = now - timedelta(minutes=16)
+        mock_session.execute.return_value.all.return_value = [
+            fresh_reserved_event,
+            expired_reserved_event,
+        ]
+
+        usage_service = UsageService()
+        days_list = await usage_service._fetch_daily_stats(
+            user_id=user_id,
+            date_from=date_from,
+            date_to=date_to,
+            daily_limit=daily_limit,
+            session=mock_session,
+        )
+
+        assert len(days_list) == 1
+        assert days_list[0].committed == 0
+        assert days_list[0].reserved == 3
+        assert days_list[0].utilization == pytest.approx(0.0, rel=1e-4)
