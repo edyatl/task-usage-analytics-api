@@ -7,10 +7,10 @@ from api.auth import get_current_user
 from api.db import get_session
 from api.models import Users
 
-usage_router = APIRouter(prefix="/usage", tags=["usage"])
+usage_router = APIRouter()
 
 
-@usage_router.get("/stats")
+@usage_router.get("/stats", response_model=UsageStats)
 async def get_usage_stats(
     days: int | None = None,
     user: Users = Depends(get_current_user),
