@@ -103,6 +103,7 @@ class UsageService:
         daily_limit: int = settings.TARIFF_MAP.get(plan_tier, _DEFAULT_DAILY_LIMIT)
         return plan_tier, daily_limit
 
+
     async def _fetch_daily_stats(
         self,
         *,
@@ -112,21 +113,30 @@ class UsageService:
         daily_limit: int,
         session: AsyncSession,
     ) -> list[DayStats]:
-        """Run a single aggregation query and return one DayStats per calendar day.
+        """Single aggregation query; every calendar day in [date_from, date_to]
+        is represented via a generate_series CTE.
 
-        Uses a PostgreSQL generate_series CTE so every date in [date_from, date_to]
-        is represented even when DailyUsageEvents has no rows for that day.
+        date_key is VARCHAR('YYYY-MM-DD') in the DB, so we cast the
+        timestamptz produced by generate_series → DATE → TEXT before joining.
         """
-        # Build the date-spine CTE once; reference it by alias throughout.
+        # generate_series returns timestamptz when fed DATE + INTERVAL.
+        # Cast explicitly to DATE inside the CTE so the spine column is typed
+        # correctly for all downstream references.
         date_spine = (
             sa.select(
-                func.generate_series(
-                    sa.cast(date_from, sa.Date),
-                    sa.cast(date_to, sa.Date),
-                    sa.cast(text("'1 day'"), sa.Interval),
+                sa.cast(
+                    func.generate_series(
+                        sa.cast(date_from, sa.Date),
+                        sa.cast(date_to, sa.Date),
+                        sa.cast(sa.literal("1 day"), sa.Interval),
+                    ),
+                    sa.Date,                      # timestamptz → date
                 ).label("day")
             ).cte("date_spine")
         )
+
+        # date_key is VARCHAR; cast the DATE spine value to TEXT for the join.
+        date_key_expr = sa.cast(date_spine.c.day, sa.String)
 
         committed_expr = func.coalesce(
             func.sum(
@@ -154,7 +164,7 @@ class UsageService:
             .outerjoin(
                 DailyUsageEvents,
                 sa.and_(
-                    DailyUsageEvents.date_key == date_spine.c.day,
+                    DailyUsageEvents.date_key == date_key_expr,   # VARCHAR = TEXT ✓
                     DailyUsageEvents.user_id == user_id,
                 ),
             )
@@ -166,7 +176,7 @@ class UsageService:
 
         return [
             DayStats(
-                date=str(row.day),
+                date=str(row.day),          # date object → 'YYYY-MM-DD'
                 committed=row.committed,
                 reserved=row.reserved,
                 limit=daily_limit,
@@ -177,6 +187,7 @@ class UsageService:
             )
             for row in rows
         ]
+
 
     @staticmethod
     def _compute_summary(days_list: list[DayStats], window: int) -> SummaryStats:

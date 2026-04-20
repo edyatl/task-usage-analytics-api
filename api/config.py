@@ -34,6 +34,7 @@ class Configuration(BaseSettings):
     DEFAULT_LANGUAGE_CODE: str = Field("en", json_schema_extra={"env": "DEFAULT_LANGUAGE_CODE"})
     UID: int = Field(..., json_schema_extra={"env": "UID"})
     GID: int = Field(..., json_schema_extra={"env": "GID"})
+    TARIFF_MAP: dict[str, int] = {"starter": 30, "pro": 100, "executive": 500}
 
     # Database settings
     POSTGRES_USER: str = Field(..., json_schema_extra={"env": "POSTGRES_USER"})
