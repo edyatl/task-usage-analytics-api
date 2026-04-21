@@ -1,18 +1,25 @@
-from fastapi import Depends, HTTPException
+from fastapi import Depends, HTTPException, Request
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from pydantic import BaseModel
 from api.models import Users
+from api.auth.service import AuthService
 
-class Token(BaseModel):
-    access_token: str
+security = HTTPBearer(auto_error=False)
 
-security = HTTPBearer()
+def get_current_user(
+    request: Request, 
+    credentials: HTTPAuthorizationCredentials | None = Depends(security)
+):
+    token = request.cookies.get("access_token")
+    if not token:
+        token = credentials.credentials if credentials else None
 
-def get_current_user(token: HTTPAuthorizationCredentials = Depends(security)):
-    # Temporary stub, replace with actual authentication logic
-    return Users(id=5, email="temp@example.com", plan_tier="starter")
+    if not token:
+        raise HTTPException(status_code=401, detail="Missing token")
 
-# def get_current_active_user(current_user: Users = Depends(get_current_user)):
-#     if not current_user.is_active:
-#         raise HTTPException(status_code=400, detail="Inactive user")
-#     return current_user
+    try:
+        payload = AuthService.decode_access_token(token)
+    except Exception as e:
+        raise HTTPException(status_code=401, detail="Invalid token")
+
+    return payload
