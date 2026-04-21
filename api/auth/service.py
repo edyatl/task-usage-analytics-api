@@ -10,7 +10,7 @@ from typing import Dict, Optional
 
 import jwt
 from jwt import PyJWTError
-from api.config import settings
+from api.config import config as settings
 
 ALGORITHM = "ES256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24 * 7
