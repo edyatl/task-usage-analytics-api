@@ -34,6 +34,7 @@ class UsageService:
         user_id: int,
         session: AsyncSession,
         days: Optional[int] = None,
+        reference_date: Optional[date] = None,
     ) -> UsageStats:
         """Return usage statistics for *user_id* over the last *days* calendar days.
 
@@ -50,7 +51,7 @@ class UsageService:
         """
         days = max(_MIN_DAYS, min(_MAX_DAYS, days if days is not None else 7))
 
-        date_to: date = datetime.now(UTC).date()
+        date_to: date = reference_date if reference_date is not None else datetime.now(UTC).date()
         date_from: date = date_to - timedelta(days=days - 1)
 
         self.logger.info(
