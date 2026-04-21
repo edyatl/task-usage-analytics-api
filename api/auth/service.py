@@ -12,7 +12,7 @@ import jwt
 from jwt import PyJWTError
 from api.config import config as settings
 
-ALGORITHM = "ES256"
+ALGORITHM = settings.JWT_ALGORITHM
 ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24 * 7
 
 
@@ -28,14 +28,14 @@ class AuthService:
         expire = datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
         to_encode.update({"exp": expire})
         encoded_jwt = jwt.encode(
-            to_encode, settings.JWT_SECRET_KEY, algorithm=ALGORITHM
+            to_encode, settings.ECDSA_PRIVATE_KEY, algorithm=ALGORITHM
         )
         return encoded_jwt
 
     @staticmethod
     def decode_access_token(token: str) -> dict:
         return jwt.decode(
-            token, settings.JWT_SECRET_KEY, algorithms=[ALGORITHM]
+            token, settings.ECDSA_PUBLIC_KEY, algorithms=[ALGORITHM]
         )
 
     @staticmethod
