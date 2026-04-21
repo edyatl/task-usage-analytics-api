@@ -7,7 +7,7 @@
 """
 
 from datetime import datetime, timedelta
-from jose import jwt
+from jose import jwt, JWTError
 from typing import Dict
 
 from api.config import settings
@@ -31,3 +31,9 @@ class AuthService:
             to_encode, settings.JWT_SECRET_KEY, algorithm=ALGORITHM
         )
         return encoded_jwt
+
+    @staticmethod
+    def decode_access_token(token: str) -> dict:
+        return jwt.decode(
+            token, settings.JWT_SECRET_KEY, algorithms=[ALGORITHM]
+        )
