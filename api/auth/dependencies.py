@@ -19,7 +19,7 @@ def get_current_user(
 
     try:
         payload = AuthService.decode_access_token(token)
-    except Exception as e:
+    except PyJWTError as e:
         raise HTTPException(status_code=401, detail="Invalid token")
 
     return payload

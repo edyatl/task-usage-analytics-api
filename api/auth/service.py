@@ -5,11 +5,11 @@
     https://github.com/edyatl
 
 """
-
 from datetime import datetime, timedelta
-from jose import jwt, JWTError
 from typing import Dict, Optional
 
+import jwt
+from jwt import PyJWTError
 from api.config import settings
 
 ALGORITHM = "ES256"
