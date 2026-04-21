@@ -3,7 +3,7 @@ from typing import Annotated
 
 from api.usage.service import UsageService
 from api.usage.schemas import UsageStats
-from api.auth import get_current_user
+from api.auth.dependencies import get_current_user
 from api.db import get_session
 from api.models import Users
 
