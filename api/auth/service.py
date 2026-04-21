@@ -6,8 +6,28 @@
 
 """
 
+from datetime import datetime, timedelta
+from jose import jwt
+from typing import Dict
+
+from api.config import settings
+
+ALGORITHM = "ES256"
+ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24 * 7
+
+
 class AuthService:
     """Service class for handling auth data."""
 
     def example_service():
         return {"message": "Service logic for auth"}
+
+    @staticmethod
+    def create_access_token(data: Dict) -> str:
+        to_encode = data.copy()
+        expire = datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+        to_encode.update({"exp": expire})
+        encoded_jwt = jwt.encode(
+            to_encode, settings.JWT_SECRET_KEY, algorithm=ALGORITHM
+        )
+        return encoded_jwt
