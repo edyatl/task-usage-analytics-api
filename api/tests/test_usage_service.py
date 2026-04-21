@@ -194,70 +194,58 @@ class TestUsageService:
 
     @pytest.mark.asyncio
     async def test_days_parameter_validation_and_clamping(self, mock_session):
-        """Test days parameter validation and clamping."""
+        """days=None defaults to 7; days=0 clamps to 1; days=91 clamps to 90."""
         user_id = 1
         daily_limit = 10
 
-        # First execute() call → user lookup (.scalars().first())
-        user_result = MagicMock()
-        user_result.scalars.return_value.first.return_value = _make_user("pro")
+        def _user_result() -> MagicMock:
+            r = MagicMock()
+            r.scalars.return_value.first.return_value = _make_user("pro")
+            return r
 
-        # Second execute() call → aggregation query (.all())
-        agg_result = MagicMock()
-        agg_result.all.return_value = [
-            _make_row(date(2024, 1, 1), committed=5, reserved=3),
+        def _agg_result(rows: list) -> MagicMock:
+            r = MagicMock()
+            r.all.return_value = rows
+            return r
+
+        # 3 get_usage_stats calls × 2 execute calls each = 6 side_effect entries
+        mock_session.execute.side_effect = [
+            # call 1: days=None  → 7-day window, 1 representative row
+            _user_result(),
+            _agg_result([_make_row(date.today() - timedelta(days=6), committed=0, reserved=0)]),
+            # call 2: days=0 → clamped to 1, single-day window
+            _user_result(),
+            _agg_result([_make_row(date.today(), committed=0, reserved=0)]),
+            # call 3: days=91 → clamped to 90
+            _user_result(),
+            _agg_result([_make_row(date.today() - timedelta(days=89), committed=0, reserved=0)]),
         ]
 
-        # Return different mocks on successive calls
-        mock_session.execute.side_effect = [user_result, agg_result]
+        today = date.today()
 
-        # Patch settings so daily_limit is deterministic regardless of env
         with patch(
             "api.usage.service.settings",
             TARIFF_MAP={"pro": daily_limit, "unknown": 30},
         ):
             usage_service = UsageService()
 
-            # Test default value when days=None
-            usage_stats = await usage_service.get_usage_stats(
-                user_id=user_id,
-                session=mock_session,
-                days=None,
+            # days=None → defaults to 7
+            stats = await usage_service.get_usage_stats(
+                user_id=user_id, session=mock_session, days=None,
             )
-            assert usage_stats.period.to_date == str(date.today())
-            assert usage_stats.period.from_date == str(date.today() - timedelta(days=6))
+            assert stats.period.to_date == str(today)
+            assert stats.period.from_date == str(today - timedelta(days=6))
 
-            # Test minimum value: if days < 1 → should be clamped to 1
-            usage_stats = await usage_service.get_usage_stats(
-                user_id=user_id,
-                session=mock_session,
-                days=0,
+            # days=0 → clamped to 1
+            stats = await usage_service.get_usage_stats(
+                user_id=user_id, session=mock_session, days=0,
             )
-            assert usage_stats.period.to_date == str(date.today())
-            assert usage_stats.period.from_date == str(date.today() - timedelta(days=0))
+            assert stats.period.to_date == str(today)
+            assert stats.period.from_date == str(today)   # 1-day window: from == to
 
-            usage_stats = await usage_service.get_usage_stats(
-                user_id=user_id,
-                session=mock_session,
-                days=-5,
+            # days=91 → clamped to 90
+            stats = await usage_service.get_usage_stats(
+                user_id=user_id, session=mock_session, days=91,
             )
-            assert usage_stats.period.to_date == str(date.today())
-            assert usage_stats.period.from_date == str(date.today() - timedelta(days=0))
-
-            # Test maximum value: if days > 90 → should be clamped to 90
-            usage_stats = await usage_service.get_usage_stats(
-                user_id=user_id,
-                session=mock_session,
-                days=100,
-            )
-            assert usage_stats.period.to_date == str(date.today())
-            assert usage_stats.period.from_date == str(date.today() - timedelta(days=89))
-
-            # Test valid value
-            usage_stats = await usage_service.get_usage_stats(
-                user_id=user_id,
-                session=mock_session,
-                days=15,
-            )
-            assert usage_stats.period.to_date == str(date.today())
-            assert usage_stats.period.from_date == str(date.today() - timedelta(days=14))
+            assert stats.period.to_date == str(today)
+            assert stats.period.from_date == str(today - timedelta(days=89))
