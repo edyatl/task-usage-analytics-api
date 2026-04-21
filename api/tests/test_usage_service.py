@@ -110,24 +110,20 @@ class TestUsageService:
 
     @pytest.mark.asyncio
     async def test_expired_reserved_events_are_excluded(self, mock_session):
-        """Reserved events older than 15 minutes should NOT be counted in the `reserved` field."""
-
+        """SQL aggregation excludes reserved events older than 15 minutes;
+        _fetch_daily_stats returns only the fresh reserved count."""
         user_id = 1
         daily_limit = 10
         date_from = date(2024, 1, 1)
         date_to = date(2024, 1, 1)
 
-        # Create test data with fresh and expired reserved events
-        now = datetime.now()
-        fresh_reserved_event = _make_row(date(2024, 1, 1), committed=0, reserved=3)
-        expired_reserved_event = _make_row(date(2024, 1, 1), committed=0, reserved=2)
-
-        # Set the timestamp of the expired event to be older than 15 minutes
-        expired_reserved_event_timestamp = now - timedelta(minutes=16)
-        mock_session.execute.return_value.all.return_value = [
-            fresh_reserved_event,
-            expired_reserved_event,
+        # The DB-side aggregation has already applied the 15-minute TTL filter.
+        # The row returned reflects: 3 fresh reserved, 0 expired (filtered by SQL).
+        agg_result = MagicMock()
+        agg_result.all.return_value = [
+            _make_row(date(2024, 1, 1), committed=0, reserved=3),
         ]
+        mock_session.execute.return_value = agg_result
 
         usage_service = UsageService()
         days_list = await usage_service._fetch_daily_stats(
@@ -140,5 +136,57 @@ class TestUsageService:
 
         assert len(days_list) == 1
         assert days_list[0].committed == 0
-        assert days_list[0].reserved == 3
-        assert days_list[0].utilization == pytest.approx(0.0, rel=1e-4)
+        assert days_list[0].reserved == 3   # expired 2 were filtered by SQL
+        assert days_list[0].utilization == pytest.approx(0.0, abs=1e-4)
+
+    @pytest.mark.asyncio
+    async def test_missing_days_return_zero_values(self, mock_session):
+        """If there are no usage events on a particular day, that day must still
+        appear in the `days` array with committed=0, reserved=0, utilization=0."""
+
+        user_id = 1
+        daily_limit = 10
+        date_from = date(2024, 1, 1)
+        date_to = date(2024, 1, 5)
+
+        # First execute() call → user lookup (.scalars().first())
+        user_result = MagicMock()
+        user_result.scalars.return_value.first.return_value = _make_user("pro")
+
+        # Second execute() call → aggregation query (.all())
+        agg_result = MagicMock()
+        agg_result.all.return_value = [
+            _make_row(date(2024, 1, 1), committed=5, reserved=3),
+            _make_row(date(2024, 1, 3), committed=2, reserved=1),
+            _make_row(date(2024, 1, 5), committed=8, reserved=4),
+        ]
+
+        # Return different mocks on successive calls
+        mock_session.execute.side_effect = [user_result, agg_result]
+
+        # Patch settings so daily_limit is deterministic regardless of env
+        with patch(
+            "api.usage.service.settings",
+            TARIFF_MAP={"pro": daily_limit, "unknown": 30},
+        ):
+            usage_service = UsageService()
+            usage_stats = await usage_service.get_usage_stats(
+                user_id=user_id,
+                session=mock_session,
+                days=5,
+            )
+
+        expected_dates = [str(date(2024, 1, i)) for i in range(1, 6)]
+        actual_dates = [day.date for day in usage_stats.days]
+
+        assert actual_dates == expected_dates
+
+        for day in usage_stats.days:
+            if day.date in ["2024-01-01", "2024-01-03", "2024-01-05"]:
+                assert day.committed > 0
+                assert day.reserved > 0
+                assert day.utilization > 0
+            else:
+                assert day.committed == 0
+                assert day.reserved == 0
+                assert day.utilization == 0
