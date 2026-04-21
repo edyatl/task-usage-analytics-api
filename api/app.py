@@ -16,6 +16,7 @@ from sqlalchemy.orm import sessionmaker
 from api.config import config as cfg
 from api.db import init_db
 from api.usage.routes import usage_router
+from api.auth.routes import auth_router
 
 # Logging setup
 from api.logger import get_cls_logger, get_func_logger, log_entry_exit
@@ -29,6 +30,7 @@ logging.getLogger("sqlalchemy").setLevel(logging.DEBUG if cfg.DEBUG else logging
 app = FastAPI(title=cfg.APP_NAME)
 
 app.include_router(usage_router, prefix="/api/usage", tags=["usage"])
+app.include_router(auth_router, prefix="/api/auth", tags=["auth"])
 
 APP_URL = cfg.APP_URL
 
