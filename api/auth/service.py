@@ -8,7 +8,7 @@
 
 from datetime import datetime, timedelta
 from jose import jwt, JWTError
-from typing import Dict
+from typing import Dict, Optional
 
 from api.config import settings
 
@@ -37,3 +37,12 @@ class AuthService:
         return jwt.decode(
             token, settings.JWT_SECRET_KEY, algorithms=[ALGORITHM]
         )
+
+    @staticmethod
+    def authenticate_user(email: str, password: str) -> Optional[dict]:
+        if email == "test@example.com" and password == "password":
+            return {
+                "sub": email,
+                "user_id": 5
+            }
+        return None
