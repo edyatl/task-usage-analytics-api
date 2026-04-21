@@ -3,6 +3,7 @@ from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from pydantic import BaseModel
 from api.models import Users
 from api.auth.service import AuthService
+import jwt
 
 security = HTTPBearer(auto_error=False)
 
@@ -19,7 +20,7 @@ def get_current_user(
 
     try:
         payload = AuthService.decode_access_token(token)
-    except PyJWTError as e:
+    except jwt.PyJWTError as e:
         raise HTTPException(status_code=401, detail="Invalid token")
 
     return payload
