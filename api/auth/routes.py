@@ -38,3 +38,17 @@ async def login(login_request: LoginRequest):
     )
 
     return token_response
+
+@auth_router.post("/logout")
+async def logout():
+    response = Response(status_code=200, content={"message": "Logged out successfully"})
+    response.set_cookie(
+        "access_token",
+        value="",
+        httponly=True,
+        secure=True,
+        samesite="lax",
+        max_age=0,
+        expires=0,
+    )
+    return response
