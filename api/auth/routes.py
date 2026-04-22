@@ -14,9 +14,6 @@ from api.auth.service import AuthService
 
 auth_router = APIRouter()
 
-@auth_router.get("/")
-async def auth_root():
-    return {"message": "Hello from auth"}
 
 @auth_router.post("/login", response_model=TokenResponse)
 async def login(login_request: LoginRequest):

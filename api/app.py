@@ -29,8 +29,8 @@ logging.getLogger("sqlalchemy").setLevel(logging.DEBUG if cfg.DEBUG else logging
 # FastAPI app initialization
 app = FastAPI(title=cfg.APP_NAME)
 
-app.include_router(usage_router, prefix="/api/usage", tags=["usage"])
 app.include_router(auth_router, prefix="/api/auth", tags=["auth"])
+app.include_router(usage_router, prefix="/api/usage", tags=["usage"])
 
 APP_URL = cfg.APP_URL
 

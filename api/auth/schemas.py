@@ -7,9 +7,6 @@
 """
 from pydantic import BaseModel
 
-class ExampleSchema(BaseModel):
-    name: str
-    age: int
 
 class LoginRequest(BaseModel):
     email: str

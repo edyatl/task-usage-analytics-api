@@ -19,9 +19,6 @@ ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24 * 7
 class AuthService:
     """Service class for handling auth data."""
 
-    def example_service():
-        return {"message": "Service logic for auth"}
-
     @staticmethod
     def create_access_token(data: Dict) -> str:
         to_encode = data.copy()
