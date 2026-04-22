@@ -5,41 +5,59 @@
     https://github.com/edyatl
 
 """
-from datetime import datetime, timedelta
-from typing import Dict, Optional
+import hmac
+from datetime import UTC, datetime, timedelta
+from typing import Any
 
 import jwt
-from jwt import PyJWTError
+from jwt import ExpiredSignatureError, PyJWTError
+
 from api.config import config as settings
 
-ALGORITHM = settings.JWT_ALGORITHM
-ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24 * 7
+_ALGORITHM: str = settings.JWT_ALGORITHM
+# Single source of truth for token lifetime — cookie max_age must match.
+ACCESS_TOKEN_TTL_SECONDS: int = 7 * 24 * 60 * 60  # 7 days
+
+# Hardcoded demo credentials (replace with DB lookup in production).
+_DEMO_EMAIL: str = "test@example.com"
+_DEMO_PASSWORD: str = "password"
+_DEMO_USER: dict[str, Any] = {"sub": _DEMO_EMAIL, "user_id": 5}
 
 
 class AuthService:
-    """Service class for handling auth data."""
+    """Stateless JWT auth helpers."""
 
     @staticmethod
-    def create_access_token(data: Dict) -> str:
-        to_encode = data.copy()
-        expire = datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
-        to_encode.update({"exp": expire})
-        encoded_jwt = jwt.encode(
-            to_encode, settings.ECDSA_PRIVATE_KEY.replace("\\n", "\n"), algorithm=ALGORITHM
+    def create_access_token(data: dict[str, Any]) -> str:
+        payload = data.copy()
+        payload["exp"] = datetime.now(UTC) + timedelta(seconds=ACCESS_TOKEN_TTL_SECONDS)
+        return jwt.encode(
+            payload,
+            settings.ECDSA_PRIVATE_KEY.replace("\\n", "\n"),
+            algorithm=_ALGORITHM,
         )
-        return encoded_jwt
 
     @staticmethod
-    def decode_access_token(token: str) -> dict:
+    def decode_access_token(token: str) -> dict[str, Any]:
+        """Decode and verify *token*.
+
+        Raises:
+            jwt.ExpiredSignatureError: token is valid but past its expiry.
+            jwt.PyJWTError:            token is malformed or signature invalid.
+        """
         return jwt.decode(
-            token, settings.ECDSA_PUBLIC_KEY.replace("\\n", "\n"), algorithms=[ALGORITHM]
+            token,
+            settings.ECDSA_PUBLIC_KEY.replace("\\n", "\n"),
+            algorithms=[_ALGORITHM],
         )
 
     @staticmethod
-    def authenticate_user(email: str, password: str) -> Optional[dict]:
-        if email == "test@example.com" and password == "password":
-            return {
-                "sub": email,
-                "user_id": 5
-            }
-        return None
+    def authenticate_user(email: str, password: str) -> dict[str, Any] | None:
+        """Return the user payload when credentials match, else None.
+
+        Uses hmac.compare_digest for timing-safe comparison even on
+        hardcoded values — establishes the correct pattern for production.
+        """
+        email_ok = hmac.compare_digest(email.lower(), _DEMO_EMAIL)
+        pass_ok = hmac.compare_digest(password, _DEMO_PASSWORD)
+        return _DEMO_USER.copy() if (email_ok and pass_ok) else None
