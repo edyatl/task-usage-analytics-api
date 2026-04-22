@@ -27,7 +27,7 @@ sdist
 develop-eggs
 __pycache__
 .installed.cfg
-lib
+#lib
 lib64
 files/
 *.mp3
