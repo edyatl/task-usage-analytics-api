@@ -5,10 +5,12 @@ anyio==4.13.0
 asyncpg==0.31.0
 billiard==4.2.4
 celery==5.6.3
+cffi==2.0.0
 click==8.3.2
 click-didyoumean==0.3.1
 click-plugins==1.1.1.2
 click-repl==0.3.0
+cryptography==46.0.7
 fastapi==0.135.3
 gevent==25.9.1
 greenlet==3.3.2
@@ -24,6 +26,7 @@ pluggy==1.6.0
 prompt_toolkit==3.0.52
 psycopg==3.3.3
 psycopg-binary==3.3.3
+pycparser==3.0
 pydantic==2.12.5
 pydantic-settings==2.13.1
 pydantic_core==2.41.5

@@ -25,14 +25,14 @@ class AuthService:
         expire = datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
         to_encode.update({"exp": expire})
         encoded_jwt = jwt.encode(
-            to_encode, settings.ECDSA_PRIVATE_KEY, algorithm=ALGORITHM
+            to_encode, settings.ECDSA_PRIVATE_KEY.replace("\\n", "\n"), algorithm=ALGORITHM
         )
         return encoded_jwt
 
     @staticmethod
     def decode_access_token(token: str) -> dict:
         return jwt.decode(
-            token, settings.ECDSA_PUBLIC_KEY, algorithms=[ALGORITHM]
+            token, settings.ECDSA_PUBLIC_KEY.replace("\\n", "\n"), algorithms=[ALGORITHM]
         )
 
     @staticmethod
