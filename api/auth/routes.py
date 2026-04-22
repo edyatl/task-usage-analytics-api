@@ -5,47 +5,59 @@
     https://github.com/edyatl
 
 """
-from fastapi import APIRouter, HTTPException, Response
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-from pydantic import BaseModel
+from fastapi import APIRouter, HTTPException, Response, status
+from fastapi.responses import JSONResponse
 
 from api.auth.schemas import LoginRequest, TokenResponse
-from api.auth.service import AuthService
+from api.auth.service import ACCESS_TOKEN_TTL_SECONDS, AuthService
 
 auth_router = APIRouter()
 
+_COOKIE_NAME = "access_token"
+
+
+def _set_auth_cookie(response: Response, token: str) -> None:
+    response.set_cookie(
+        key=_COOKIE_NAME,
+        value=token,
+        httponly=True,
+        secure=True,
+        samesite="lax",
+        max_age=ACCESS_TOKEN_TTL_SECONDS,   # single source of truth
+    )
+
+
+def _clear_auth_cookie(response: Response) -> None:
+    response.delete_cookie(
+        key=_COOKIE_NAME,
+        httponly=True,
+        secure=True,
+        samesite="lax",
+    )
+
 
 @auth_router.post("/login", response_model=TokenResponse)
-async def login(login_request: LoginRequest):
+async def login(login_request: LoginRequest) -> Response:
     user = AuthService.authenticate_user(login_request.email, login_request.password)
     if not user:
-        raise HTTPException(status_code=401, detail="Invalid credentials")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid credentials",
+        )
 
     access_token = AuthService.create_access_token(user)
-    token_response = TokenResponse(access_token=access_token, token_type="bearer")
 
-    response = Response(status_code=200, content={"access_token": access_token, "token_type": "bearer"})
-    response.set_cookie(
-        "access_token",
-        value=access_token,
-        httponly=True,
-        secure=True,
-        samesite="lax",
-        max_age=60 * 7 * 24 * 60,  # 7 days
+    # JSONResponse is the actual HTTP response — cookie is attached to it,
+    # not to a discarded intermediate object.
+    response = JSONResponse(
+        content={"access_token": access_token, "token_type": "bearer"},
     )
+    _set_auth_cookie(response, access_token)
+    return response
 
-    return token_response
 
-@auth_router.post("/logout")
-async def logout():
-    response = Response(status_code=200, content={"message": "Logged out successfully"})
-    response.set_cookie(
-        "access_token",
-        value="",
-        httponly=True,
-        secure=True,
-        samesite="lax",
-        max_age=0,
-        expires=0,
-    )
+@auth_router.post("/logout", status_code=status.HTTP_200_OK)
+async def logout() -> Response:
+    response = JSONResponse(content={"message": "Logged out successfully"})
+    _clear_auth_cookie(response)
     return response
