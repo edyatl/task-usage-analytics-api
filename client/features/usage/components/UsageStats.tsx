@@ -19,8 +19,12 @@ const UsageStats = () => {
 
   if (data && data.days.length === 0) {
     return (
-      <div className="flex justify-center">
-        <p className="text-gray-500 dark:text-gray-400">No usage data yet for this period.</p>
+      <div className="text-center py-16 text-gray-400 dark:text-gray-500">
+        <div>
+          <span>📊</span>
+          <h2>No data yet</h2>
+          <p>Start using the service to see your usage stats here.</p>
+        </div>
       </div>
     );
   }

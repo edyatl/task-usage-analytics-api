@@ -27,7 +27,11 @@ const TodayProgress = ({ days, dailyLimit, plan }: Props) => {
           style={{ width: `${Math.min(utilization * 100, 100)}%` }}
         />
       </div>
-      <p className="text-sm text-gray-500 dark:text-gray-400">{Math.round(utilization * 100)}% of daily limit used</p>
+      {todayEntry ? (
+        <p className="text-sm text-gray-500 dark:text-gray-400">{Math.round(utilization * 100)}% of daily limit used</p>
+      ) : (
+        <p className="text-sm text-gray-500 dark:text-gray-400">No usage recorded today yet</p>
+      )}
     </div>
   );
 };
