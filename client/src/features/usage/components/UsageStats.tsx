@@ -34,13 +34,13 @@ const UsageStats = () => {
       <header>
         <h1 className="text-xl font-semibold">Usage Statistics</h1>
         <p className="text-sm text-gray-500 dark:text-gray-400">
-          Last 7 days · {data?.plan} plan · {data?.daily_limit} req/day limit
+          Last 7 days · {data.plan} plan · {data.daily_limit} req/day limit
         </p>
       </header>
-      <div className="gap-4 md:gap-6">
-        <SummaryCards summary={data?.summary} plan={data?.plan} />
-        <UsageBarChart days={data?.days} />
-        <TodayProgress days={data?.days} dailyLimit={data?.daily_limit} plan={data?.plan} />
+      <div className="space-y-6 mt-4">
+        <SummaryCards summary={data.summary} plan={data.plan} />
+        <UsageBarChart days={data.days} />
+        <TodayProgress days={data.days} dailyLimit={data.daily_limit} plan={data.plan} />
       </div>
     </div>
   );
