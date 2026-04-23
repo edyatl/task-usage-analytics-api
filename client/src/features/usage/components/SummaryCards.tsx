@@ -1,13 +1,10 @@
-import React from 'react';
-import { UsageSummary } from '../types/usage';
-import { PlanType } from '../types/usage';
+import { UsageSummary } from '../../types/usage';
 
 interface Props {
   summary: UsageSummary;
-  plan: PlanType;
 }
 
-const SummaryCards = ({ summary, plan }: Props) => {
+const SummaryCards = ({ summary }: Props) => {
   return (
     <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
       <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-4">

@@ -1,5 +1,4 @@
-import React from 'react';
-import useUsageStats from '../api/useUsageStats';
+import { useUsageStats } from '../api/useUsageStats';
 import UsageStatsSkeleton from './UsageStatsSkeleton';
 import UsageStatsError from './UsageStatsError';
 import SummaryCards from './SummaryCards';
@@ -38,7 +37,7 @@ const UsageStats = () => {
         </p>
       </header>
       <div className="space-y-6 mt-4">
-        <SummaryCards summary={data.summary} plan={data.plan} />
+        <SummaryCards summary={data.summary} />
         <UsageBarChart days={data.days} />
         <TodayProgress days={data.days} dailyLimit={data.daily_limit} plan={data.plan} />
       </div>

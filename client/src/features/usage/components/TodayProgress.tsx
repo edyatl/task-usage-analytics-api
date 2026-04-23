@@ -1,5 +1,5 @@
-import React from 'react';
-import { UsageDay } from '../types/usage';
+import { UsageDay } from '../../types/usage';
+import { PlanType } from '../../types/usage';
 
 interface Props {
   days: UsageDay[];
