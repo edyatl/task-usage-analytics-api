@@ -24,7 +24,7 @@ const UsageBarChart = ({ days }: Props) => {
         <BarChart data={days}>
           <XAxis
             dataKey="date"
-            tickFormatter={(tick: string) => {
+            tickFormatter={(tick) => {
               const [y, m, d] = tick.split('-').map(Number);
               return new Date(y, m - 1, d).toLocaleString('default', { weekday: 'short' });
             }}
@@ -32,13 +32,14 @@ const UsageBarChart = ({ days }: Props) => {
           <YAxis />
           <Tooltip
             contentStyle={{ backgroundColor: 'var(--background)', border: '1px solid #374151', borderRadius: '8px', color: 'inherit' }}
-            formatter={(value: number, name: string) => {
-              if (name === 'committed' || name === 'reserved') {
+            formatter={(value, name) => {
+              if ((name === 'committed' || name === 'reserved') && value !== undefined) {
                 return [value, `${name} count`];
               }
-              return [value, ''];
+              return [value ?? 0, ''];
             }}
-            labelFormatter={(label: string) => {
+            labelFormatter={(label) => {
+              if (typeof label !== 'string') return '';
               const [y, m, d] = label.split('-').map(Number);
               return new Date(y, m - 1, d).toLocaleString('default', { month: 'short', day: 'numeric' });
             }}
