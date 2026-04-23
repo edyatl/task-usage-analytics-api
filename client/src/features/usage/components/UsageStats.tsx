@@ -16,7 +16,9 @@ const UsageStats = () => {
     return <UsageStatsError message={error?.message ?? 'Failed to load stats'} onRetry={refetch} />;
   }
 
-  if (data && data.days.length === 0) {
+  if (!data) return null;
+
+  if (data.days.length === 0) {
     return (
       <div className="text-center py-16 text-gray-400 dark:text-gray-500">
         <div>
