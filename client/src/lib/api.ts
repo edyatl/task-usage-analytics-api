@@ -13,12 +13,14 @@ async function apiFetch<T>(path: string, options?: RequestInit): Promise<T> {
   const response = await fetch(url, mergedOptions);
 
   if (!response.ok) {
+    let message = response.statusText;
     try {
-      const errorResponse = await response.json();
-      throw new Error(errorResponse.detail || response.statusText);
+      const body = await response.json();
+      if (typeof body?.detail === 'string') message = body.detail;
     } catch {
-      throw new Error(response.statusText);
+      // body is not JSON, keep statusText
     }
+    throw new Error(message);
   }
 
   return response.json() as Promise<T>;
