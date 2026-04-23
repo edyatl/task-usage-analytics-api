@@ -15,7 +15,7 @@ const SummaryCards = ({ summary, plan }: Props) => {
         <p className="text-sm text-gray-500 dark:text-gray-400">requests this period</p>
       </div>
       <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-4">
-        <h2 className="text-3xl font-bold">{isNaN(summary.avg_daily) || summary.avg_daily === 0 ? '0.0' : summary.avg_daily.toFixed(1)}</h2>
+        <h2 className="text-3xl font-bold">{isNaN(summary.avg_daily) ? '—' : summary.avg_daily.toFixed(1)}</h2>
         <p className="text-sm text-gray-500 dark:text-gray-400">requests/day</p>
       </div>
       <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-4">
