@@ -1,4 +1,4 @@
-import { UsageSummary } from '../../types/usage';
+import { UsageSummary } from '../../../types/usage';
 
 interface Props {
   summary: UsageSummary;

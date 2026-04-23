@@ -7,7 +7,7 @@ import {
   Legend,
   ResponsiveContainer,
 } from 'recharts';
-import { UsageDay } from '../../types/usage';
+import { UsageDay } from '../../../types/usage';
 
 interface Props {
   days: UsageDay[];
