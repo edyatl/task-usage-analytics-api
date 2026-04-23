@@ -20,10 +20,9 @@ const TodayProgress = ({ days, dailyLimit, plan }: Props) => {
     <div>
       <h2 className="text-lg font-bold">Today's usage</h2>
       <p className="text-sm text-gray-500 dark:text-gray-400">{committed} / {dailyLimit} requests ({plan} plan)</p>
-      <div className="relative w-full">
-        <div className="bg-gray-100 dark:bg-gray-800 rounded-full h-3" />
+      <div className="relative w-full bg-gray-100 dark:bg-gray-800 rounded-full h-3 overflow-hidden">
         <div
-          className={`${progressColor} rounded-full h-3 transition-all`}
+          className={`${progressColor} h-3 rounded-full transition-all duration-300`}
           style={{ width: `${Math.min(utilization * 100, 100)}%` }}
         />
       </div>
