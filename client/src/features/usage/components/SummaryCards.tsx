@@ -21,7 +21,12 @@ const SummaryCards = ({ summary, plan }: Props) => {
       <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-4">
         <h2 className="text-3xl font-bold">{summary.peak_day.count}</h2>
         <p className="text-sm text-gray-500 dark:text-gray-400">
-          {summary.peak_day.date ? new Date(summary.peak_day.date).toLocaleString('default', { month: 'short', day: '2-digit' }) : '—'}
+          {summary.peak_day.date ? 
+            (() => { 
+              const [y, m, d] = summary.peak_day.date.split('-').map(Number); 
+              return new Date(y, m - 1, d).toLocaleString('default', { month: 'short', day: 'numeric' }); 
+            })() 
+          : '—'}
         </p>
       </div>
       <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-4">
