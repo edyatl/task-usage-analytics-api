@@ -55,14 +55,31 @@ services:
       echo 'Models generated'
       "
 
+  client-build:
+    build:
+      context: ./client
+      dockerfile: Dockerfile.builder
+    container_name: client-build-container
+    volumes:
+      - client-dist:/dist
+    command: >
+      sh -c "
+      rm -rf /dist/* &&
+      cp -r /app/dist/* /dist/ &&
+      echo 'Frontend build complete'
+      "
+
   client:
     image: nginx:alpine  # Temporary stub
     container_name: client-container
     ports:
       - "8080:80"  # Exposing Admin Panel
-    restart: unless-stopped
+    depends_on:
+      client-build:
+        condition: service_completed_successfully
     volumes:
-      - ./client:/usr/share/nginx/html:ro
+      - client-dist:/usr/share/nginx/html:ro
+    restart: unless-stopped
 
   prisma-migrate:
     build:
@@ -162,6 +179,8 @@ volumes:
   usage-stats-pgdata:
     driver: local
   prisma-node-modules:
+    driver: local
+  client-dist:
     driver: local
 
 networks:
