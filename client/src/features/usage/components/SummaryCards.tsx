@@ -1,3 +1,4 @@
+
 import { Card, CardContent } from '../../../components/ui/Card';
 import { UsageSummary } from '../../../types/usage';
 
@@ -5,40 +6,69 @@ interface Props {
   summary: UsageSummary;
 }
 
+interface StatItem {
+  label: string;
+  value: string | number;
+  sub: string;
+  icon: string;
+  delay: string;
+}
+
 const SummaryCards = ({ summary }: Props) => {
-  const items = [
+  const items: StatItem[] = [
     {
-      label: 'Total',
-      value: summary.total_committed,
-      sub: 'requests this period',
+      label: 'Total Requests',
+      value: summary.total_committed.toLocaleString(),
+      sub: 'this period',
+      icon: '⬡',
+      delay: 'animation-delay-100',
     },
     {
-      label: 'Average',
+      label: 'Daily Average',
       value: isNaN(summary.avg_daily) ? '—' : summary.avg_daily.toFixed(1),
       sub: 'requests per day',
+      icon: '◈',
+      delay: 'animation-delay-200',
     },
     {
-      label: 'Peak',
+      label: 'Peak Day',
       value: summary.peak_day.count,
       sub: formatDate(summary.peak_day.date),
+      icon: '▲',
+      delay: 'animation-delay-300',
     },
     {
-      label: 'Streak',
+      label: 'Active Streak',
       value: summary.current_streak,
-      sub: 'days in a row',
+      sub: summary.current_streak === 1 ? 'day running' : 'days running',
+      icon: '◎',
+      delay: 'animation-delay-400',
     },
   ];
 
   return (
-    <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+    <div className="grid grid-cols-2 gap-3 lg:grid-cols-4 lg:gap-4">
       {items.map((item) => (
         <Card
           key={item.label}
-          className="rounded-2xl transition-all hover:shadow-md"
+          className={`animate-fade-up ${item.delay} opacity-0`}
         >
-          <CardContent className="space-y-1">
-            <p className="text-sm text-muted-foreground">{item.label}</p>
-            <p className="text-2xl font-semibold tracking-tight">
+          <CardContent className="space-y-2">
+            <div className="flex items-center justify-between">
+              <p className="text-xs font-medium uppercase tracking-widest text-muted-foreground">
+                {item.label}
+              </p>
+              <span
+                className="text-xs text-primary opacity-60 font-mono"
+                aria-hidden
+              >
+                {item.icon}
+              </span>
+            </div>
+            <p
+              className="text-3xl font-display font-normal tracking-tight text-foreground"
+              style={{ fontFamily: "'DM Serif Display', Georgia, serif" }}
+            >
               {item.value}
             </p>
             <p className="text-xs text-muted-foreground">{item.sub}</p>
@@ -56,6 +86,6 @@ function formatDate(date?: string) {
     month: 'short',
     day: 'numeric',
   });
-};
+}
 
 export default SummaryCards;
