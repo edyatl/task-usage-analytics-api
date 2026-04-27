@@ -15,8 +15,10 @@ interface Props {
   dailyLimit?: number;
 }
 
-const formatShortDate = (dateStr: string) => {
+const formatShortDate = (dateStr: unknown): string => {
+  if (typeof dateStr !== 'string' || !dateStr.includes('-')) return String(dateStr ?? '');
   const [y, m, d] = dateStr.split('-').map(Number);
+  if (!y || !m || !d) return dateStr;
   return new Date(y, m - 1, d).toLocaleString('default', {
     month: 'short',
     day: 'numeric',
