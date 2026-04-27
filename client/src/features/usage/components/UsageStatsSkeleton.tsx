@@ -1,5 +1,7 @@
-const Pulse = ({ className = '' }: { className?: string }) => (
-  <div className={`animate-pulse rounded-[var(--radius)] bg-muted ${className}`} />
+import React from 'react';
+
+const Pulse = ({ className = '', style }: { className?: string; style?: React.CSSProperties }) => (
+  <div className={`animate-pulse rounded-[var(--radius)] bg-muted ${className}`} style={style} />
 );
 
 const UsageStatsSkeleton = () => {
