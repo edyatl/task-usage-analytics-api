@@ -86,3 +86,9 @@ body::before {
   .animation-delay-400 { animation-delay: 400ms; }
   .animation-delay-500 { animation-delay: 500ms; }
 }
+
+/* Ensure animated elements are invisible before their animation starts
+   and stay visible after it ends (fill-mode: forwards) */
+.animate-fade-up {
+  animation-fill-mode: both;
+}
