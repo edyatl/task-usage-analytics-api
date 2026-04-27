@@ -50,7 +50,7 @@ const SummaryCards = ({ summary }: Props) => {
       {items.map((item) => (
         <Card
           key={item.label}
-          className={`animate-fade-up ${item.delay} opacity-0`}
+          className={`animate-fade-up ${item.delay}`}
         >
           <CardContent className="space-y-2">
             <div className="flex items-center justify-between">
