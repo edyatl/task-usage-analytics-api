@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useUsageStats } from '../api/useUsageStats';
 import UsageStatsSkeleton from './UsageStatsSkeleton';
@@ -135,7 +134,9 @@ const UsageStats = () => {
 };
 
 function formatPeriod(dateStr: string) {
+  if (!dateStr || !dateStr.includes('-')) return dateStr ?? '';
   const [y, m, d] = dateStr.split('-').map(Number);
+  if (!y || !m || !d) return dateStr;
   return new Date(y, m - 1, d).toLocaleString('default', {
     month: 'short',
     day: 'numeric',
