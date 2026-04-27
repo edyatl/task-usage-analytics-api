@@ -5,10 +5,10 @@ import UsageStatsError from './UsageStatsError';
 import SummaryCards from './SummaryCards';
 import UsageBarChart from './UsageBarChart';
 import TodayProgress from './TodayProgress';
-import { Card, CardContent } from '../../../components/ui/Card';
 
 const UsageStats = () => {
   const { data, isLoading, isError, error, refetch } = useUsageStats(7);
+
   const [dark, setDark] = useState(() =>
     window.matchMedia('(prefers-color-scheme: dark)').matches
   );
@@ -20,27 +20,24 @@ const UsageStats = () => {
   return (
     <div className="min-h-screen bg-background px-4 py-8 md:py-12">
       <div className="max-w-4xl mx-auto space-y-10">
-        {/* Page Header */}
-        <header className="animate-fade-up flex items-end justify-between gap-4">
+        {/* Header */}
+        <div className="flex items-center justify-between">
           <div>
-            <p className="text-xs font-mono uppercase tracking-[0.2em] text-muted-foreground mb-1">
-              Analytics
-            </p>
-            <h1
-              className="text-4xl md:text-5xl font-normal text-foreground leading-none"
-              style={{ fontFamily: "'DM Serif Display', Georgia, serif" }}
-            >
-              Usage Stats
+            <h1 className="text-3xl md:text-4xl font-semibold tracking-tight text-foreground">
+              Usage Analytics
             </h1>
+            <p className="text-muted-foreground mt-1">
+              Monitor your daily AI usage and limits
+            </p>
           </div>
+
           <button
             onClick={() => setDark((d) => !d)}
-            className="shrink-0 w-9 h-9 flex items-center justify-center rounded-full border border-border bg-card text-muted-foreground hover:text-foreground hover:border-foreground/20 transition-colors"
+            className="shrink-0 w-9 h-9 flex items-center justify-center rounded-full border border-border bg-card text-muted-foreground hover:text-foreground hover:border-foreground/30 transition-all"
             aria-label="Toggle dark mode"
           >
             {dark ? (
-              // Sun icon
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.25" strokeLinecap="round" strokeLinejoin="round">
                 <circle cx="12" cy="12" r="5"/>
                 <line x1="12" y1="1" x2="12" y2="3"/>
                 <line x1="12" y1="21" x2="12" y2="23"/>
@@ -52,83 +49,66 @@ const UsageStats = () => {
                 <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
               </svg>
             ) : (
-              // Moon icon
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.25" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
               </svg>
             )}
           </button>
-        </header>
+        </div>
 
-        {/* Meta strip */}
+        {/* Meta Info */}
         {data && (
-          <div className="animate-fade-up animation-delay-100 flex items-center gap-3 text-xs text-muted-foreground font-mono border-b border-border pb-4">
-            <span>
-              {formatPeriod(data.period.from || data.days[0]?.date)} → {formatPeriod(data.period.to || data.days[data.days.length - 1]?.date)}
-            </span>
-            <span className="text-border">·</span>
-            <span className="text-foreground font-medium">{data.daily_limit} req/day limit</span>
-            <span className="text-border">·</span>
-            <span className="capitalize">{data.plan} plan</span>
+          <div className="flex items-center gap-3 text-sm text-muted-foreground font-mono">
+            <span className="capitalize">{data.plan} Plan</span>
+            <span className="text-border">•</span>
+            <span>{data.daily_limit} requests / day</span>
+            {data.period && (
+              <>
+                <span className="text-border">•</span>
+                <span>
+                  {formatPeriod(data.period.from)} — {formatPeriod(data.period.to)}
+                </span>
+              </>
+            )}
           </div>
         )}
 
-        {/* Main content */}
+        {/* Loading / Error / Empty States */}
         {isLoading && <UsageStatsSkeleton />}
-
-        {isError && (
-          <UsageStatsError
-            message={error?.message ?? 'Failed to load stats'}
-            onRetry={refetch}
-          />
-        )}
-
-        {!isLoading && !isError && !data && null}
+        {isError && <UsageStatsError message={error?.message ?? 'Failed to load usage data'} onRetry={refetch} />}
 
         {!isLoading && !isError && data && data.days.length === 0 && (
-          <div className="animate-fade-up animation-delay-200 text-center py-20">
-            <p className="text-5xl mb-4">◎</p>
-            <p
-              className="text-2xl text-foreground mb-2"
-              style={{ fontFamily: "'DM Serif Display', Georgia, serif" }}
-            >
-              No data yet
-            </p>
-            <p className="text-sm text-muted-foreground">
-              Start using the service to see your usage stats here.
+          <div className="text-center py-20">
+            <p className="text-6xl mb-6 opacity-40">◎</p>
+            <p className="text-2xl font-light text-foreground mb-2">No usage data yet</p>
+            <p className="text-muted-foreground max-w-sm mx-auto">
+              Once you start using the AI assistant, your daily usage will appear here.
             </p>
           </div>
         )}
 
+        {/* Main Dashboard */}
         {!isLoading && !isError && data && data.days.length > 0 && (
           <div className="space-y-10">
-            {/* Today's progress */}
+            {/* Today's Progress - Prominent Card */}
             <TodayProgress
               days={data.days}
               dailyLimit={data.daily_limit}
               plan={data.plan}
             />
 
-            {/* Summary stat cards */}
-            <div className="space-y-6">
-              <SummaryCards summary={data.summary} />
+            {/* Summary Stats */}
+            <SummaryCards summary={data.summary} />
 
-              {/* Bar chart */}
-              <Card className="overflow-hidden">
-                <CardContent className="space-y-3">
-                  <div className="flex items-center justify-between border-b border-border pb-3">
-                    <h2 className="text-sm font-semibold text-foreground">
-                      Daily Breakdown
-                    </h2>
-                    <span className="text-xs font-mono text-muted-foreground">
-                      last {data.days.length}d
-                    </span>
-                  </div>
-                  <div className="w-full min-w-0">
-                    <UsageBarChart days={data.days} dailyLimit={data.daily_limit} />
-                  </div>
-                </CardContent>
-              </Card>
+            {/* Daily Usage Chart */}
+            <div className="rounded-[var(--radius)] border border-border bg-card overflow-hidden">
+              <div className="p-6 pb-4 border-b border-border">
+                <h2 className="text-lg font-semibold text-foreground">Daily Usage</h2>
+                <p className="text-sm text-muted-foreground">Last {data.days.length} days</p>
+              </div>
+              <div className="p-6">
+                <UsageBarChart days={data.days} dailyLimit={data.daily_limit} />
+              </div>
             </div>
           </div>
         )}
@@ -137,14 +117,10 @@ const UsageStats = () => {
   );
 };
 
-function formatPeriod(dateStr: string) {
-  if (!dateStr || !dateStr.includes('-')) return dateStr ?? '';
-  const [y, m, d] = dateStr.split('-').map(Number);
-  if (!y || !m || !d) return dateStr;
-  return new Date(y, m - 1, d).toLocaleString('default', {
-    month: 'short',
-    day: 'numeric',
-  });
+function formatPeriod(dateStr?: string) {
+  if (!dateStr) return '';
+  const date = new Date(dateStr);
+  return date.toLocaleDateString('default', { month: 'short', day: 'numeric' });
 }
 
 export default UsageStats;
