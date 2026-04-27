@@ -40,7 +40,7 @@ const TodayProgress = ({ days, dailyLimit, plan }: Props) => {
   const remaining = Math.max(dailyLimit - total, 0);
 
   return (
-    <Card className="animate-fade-up animation-delay-500 opacity-0">
+    <Card className="animate-fade-up animation-delay-500">
       <CardContent className="space-y-4">
         {/* Header row */}
         <div className="flex items-start justify-between gap-3">
