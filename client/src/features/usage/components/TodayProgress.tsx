@@ -1,3 +1,4 @@
+import { Card, CardContent } from '../../../components/ui/Card';
 import { UsageDay } from '../../../types/usage';
 import { PlanType } from '../../../types/usage';
 
@@ -8,31 +9,40 @@ interface Props {
 }
 
 const TodayProgress = ({ days, dailyLimit, plan }: Props) => {
-  const now = new Date();
-  const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
-  const todayEntry = days.find((day) => day.date === today);
+  const todayStr = new Date().toISOString().slice(0, 10);
+  const today = days.find((d) => d.date === todayStr);
 
-  const committed = todayEntry ? todayEntry.committed : 0;
-  const utilization = todayEntry ? todayEntry.committed / dailyLimit : 0;
-
-  const progressColor = utilization >= 0.9 ? 'bg-red-500' : utilization >= 0.7 ? 'bg-amber-500' : 'bg-indigo-500';
+  const committed = today?.committed ?? 0;
+  const utilization = committed / dailyLimit;
 
   return (
-    <div>
-      <h2 className="text-lg font-bold">Today's usage</h2>
-      <p className="text-sm text-gray-500 dark:text-gray-400">{committed} / {dailyLimit} requests ({plan} plan)</p>
-      <div className="relative w-full bg-gray-100 dark:bg-gray-800 rounded-full h-3 overflow-hidden">
-        <div
-          className={`${progressColor} h-3 rounded-full transition-all duration-300`}
-          style={{ width: `${Math.min(utilization * 100, 100)}%` }}
-        />
-      </div>
-      {todayEntry ? (
-        <p className="text-sm text-gray-500 dark:text-gray-400">{Math.round(utilization * 100)}% of daily limit used</p>
-      ) : (
-        <p className="text-sm text-gray-500 dark:text-gray-400">No usage recorded today yet</p>
-      )}
-    </div>
+    <Card>
+      <CardContent className="space-y-3">
+        <div className="flex items-center justify-between">
+          <h2 className="text-base font-medium">Today's usage</h2>
+          <span className="text-xs px-2 py-1 rounded-full bg-muted">
+            {plan}
+          </span>
+        </div>
+
+        <div className="text-sm text-muted-foreground">
+          {committed} / {dailyLimit} requests
+        </div>
+
+        <div className="h-2 w-full rounded-full bg-muted overflow-hidden">
+          <div
+            className="h-full bg-primary transition-all duration-500 ease-out"
+            style={{ width: `${Math.min(utilization * 100, 100)}%` }}
+          />
+        </div>
+
+        <div className="text-xs text-muted-foreground">
+          {today
+            ? `${Math.round(utilization * 100)}% of daily limit`
+            : 'No usage today'}
+        </div>
+      </CardContent>
+    </Card>
   );
 };
 

@@ -24,29 +24,36 @@ const UsageBarChart = ({ days }: Props) => {
         <BarChart data={days}>
           <XAxis
             dataKey="date"
-            tickFormatter={(tick) => {
-              const [y, m, d] = tick.split('-').map(Number);
-              return new Date(y, m - 1, d).toLocaleString('default', { weekday: 'short' });
-            }}
+            stroke="rgb(var(--muted-foreground))"
           />
-          <YAxis />
+          <YAxis stroke="rgb(var(--muted-foreground))" />
+
           <Tooltip
-            contentStyle={{ backgroundColor: 'var(--background)', border: '1px solid #374151', borderRadius: '8px', color: 'inherit' }}
-            formatter={(value, name) => {
-              if ((name === 'committed' || name === 'reserved') && value !== undefined) {
-                return [value, `${name} count`];
-              }
-              return [value ?? 0, ''];
-            }}
-            labelFormatter={(label) => {
-              if (typeof label !== 'string') return '';
-              const [y, m, d] = label.split('-').map(Number);
-              return new Date(y, m - 1, d).toLocaleString('default', { month: 'short', day: 'numeric' });
+            contentStyle={{
+              backgroundColor: 'rgb(var(--card))',
+              borderRadius: '12px',
+              border: '1px solid rgb(var(--border))',
             }}
           />
-          <Bar dataKey="committed" fill="#6366f1" />
-          <Bar dataKey="reserved" fill="#a5b4fc" />
-          <Legend />
+
+          <Bar
+            dataKey="committed"
+            fill="rgb(var(--primary))"
+            radius={[6, 6, 0, 0]}
+          />
+
+          <Bar
+            dataKey="reserved"
+            fill="rgb(var(--muted-foreground))"
+            radius={[6, 6, 0, 0]}
+          />
+
+          <Legend
+            wrapperStyle={{
+              fontSize: '12px',
+              color: 'rgb(var(--muted-foreground))',
+            }}
+          />
         </BarChart>
       </ResponsiveContainer>
     </div>
