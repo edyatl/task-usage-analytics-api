@@ -67,7 +67,7 @@ const UsageBarChart = ({ days, dailyLimit }: Props) => {
   const maxVal = Math.max(...days.map((d) => d.committed + (d.reserved ?? 0)));
 
   return (
-    <div className="animate-fade-up animation-delay-300 opacity-0">
+    <div className="animate-fade-up animation-delay-300">
       <ResponsiveContainer width="100%" height={240}>
         <BarChart
           data={days}
