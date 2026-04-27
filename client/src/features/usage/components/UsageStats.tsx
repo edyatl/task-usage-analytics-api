@@ -21,7 +21,7 @@ const UsageStats = () => {
     <div className="min-h-screen bg-background px-4 py-8 md:py-12">
       <div className="max-w-3xl mx-auto space-y-8">
         {/* Page Header */}
-        <header className="animate-fade-up opacity-0 flex items-end justify-between gap-4">
+        <header className="animate-fade-up flex items-end justify-between gap-4">
           <div>
             <p className="text-xs font-mono uppercase tracking-[0.2em] text-muted-foreground mb-1">
               Analytics
@@ -62,9 +62,9 @@ const UsageStats = () => {
 
         {/* Meta strip */}
         {data && (
-          <div className="animate-fade-up animation-delay-100 opacity-0 flex items-center gap-3 text-xs text-muted-foreground font-mono border-b border-border pb-4">
+          <div className="animate-fade-up animation-delay-100 flex items-center gap-3 text-xs text-muted-foreground font-mono border-b border-border pb-4">
             <span>
-              {formatPeriod(data.period.from)} → {formatPeriod(data.period.to)}
+              {formatPeriod(data.period.from || data.days[0]?.date)} → {formatPeriod(data.period.to || data.days[data.days.length - 1]?.date)}
             </span>
             <span className="text-border">·</span>
             <span className="text-foreground font-medium">{data.daily_limit} req/day limit</span>
@@ -86,7 +86,7 @@ const UsageStats = () => {
         {!isLoading && !isError && !data && null}
 
         {!isLoading && !isError && data && data.days.length === 0 && (
-          <div className="animate-fade-up animation-delay-200 opacity-0 text-center py-20">
+          <div className="animate-fade-up animation-delay-200 text-center py-20">
             <p className="text-5xl mb-4">◎</p>
             <p
               className="text-2xl text-foreground mb-2"
@@ -113,7 +113,7 @@ const UsageStats = () => {
             <SummaryCards summary={data.summary} />
 
             {/* Bar chart */}
-            <Card className="animate-fade-up animation-delay-400 opacity-0">
+            <Card className="animate-fade-up animation-delay-400 overflow-hidden">
               <CardContent className="space-y-2">
                 <div className="flex items-center justify-between mb-1">
                   <h2 className="text-sm font-semibold text-foreground">
@@ -123,7 +123,9 @@ const UsageStats = () => {
                     last {data.days.length}d
                   </span>
                 </div>
-                <UsageBarChart days={data.days} dailyLimit={data.daily_limit} />
+                <div className="w-full min-w-0">
+                  <UsageBarChart days={data.days} dailyLimit={data.daily_limit} />
+                </div>
               </CardContent>
             </Card>
           </>
