@@ -1,3 +1,35 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+:root {
+  --background: 255 255 255;
+  --foreground: 17 24 39;
+
+  --card: 255 255 255;
+  --card-foreground: 17 24 39;
+
+  --muted: 243 244 246;
+  --muted-foreground: 107 114 128;
+
+  --border: 229 231 235;
+
+  --primary: 99 102 241;
+  --primary-foreground: 255 255 255;
+}
+
+.dark {
+  --background: 17 24 39;
+  --foreground: 243 244 246;
+
+  --card: 31 41 55;
+  --card-foreground: 243 244 246;
+
+  --muted: 55 65 81;
+  --muted-foreground: 156 163 175;
+
+  --border: 55 65 81;
+
+  --primary: 129 140 248;
+  --primary-foreground: 17 24 39;
+}
