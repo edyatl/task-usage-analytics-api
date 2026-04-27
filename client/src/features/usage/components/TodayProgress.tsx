@@ -32,9 +32,9 @@ const TodayProgress = ({ days, dailyLimit, plan }: Props) => {
 
   const statusColor =
     pct >= 90
-      ? '[&>div]:bg-[rgb(var(--danger))]'
+      ? '[&>div]:bg-danger'
       : pct >= 70
-      ? '[&>div]:bg-[rgb(var(--warning))]'
+      ? '[&>div]:bg-warning'
       : '';
 
   const remaining = Math.max(dailyLimit - total, 0);
@@ -85,9 +85,9 @@ const TodayProgress = ({ days, dailyLimit, plan }: Props) => {
           className="h-3"
           indicatorClassName={
             pct >= 90
-              ? 'bg-[rgb(var(--danger))]'
+              ? 'bg-danger'
               : pct >= 70
-              ? 'bg-[rgb(var(--warning))]'
+              ? 'bg-warning'
               : 'bg-primary'
           }
         />
