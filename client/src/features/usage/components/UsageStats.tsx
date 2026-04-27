@@ -116,7 +116,7 @@ const UsageStats = () => {
               {/* Bar chart */}
               <Card className="overflow-hidden">
                 <CardContent className="space-y-3">
-                  <div className="flex items-center justify-between mb-1">
+                  <div className="flex items-center justify-between border-b border-border pb-3">
                     <h2 className="text-sm font-semibold text-foreground">
                       Daily Breakdown
                     </h2>

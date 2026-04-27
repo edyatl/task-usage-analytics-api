@@ -52,7 +52,7 @@ const SummaryCards = ({ summary }: Props) => {
           key={item.label}
           className={`animate-fade-up ${item.delay}`}
         >
-          <CardContent className="space-y-2">
+          <CardContent className="space-y-4">
             <div className="flex items-center justify-between">
               <p className="text-xs font-medium uppercase tracking-widest text-muted-foreground">
                 {item.label}
