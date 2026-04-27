@@ -5,8 +5,8 @@ import {
   YAxis,
   Tooltip,
   ResponsiveContainer,
-  Cell,
   ReferenceLine,
+  Cell,
 } from 'recharts';
 import { UsageDay } from '../../../types/usage';
 
@@ -15,11 +15,10 @@ interface Props {
   dailyLimit?: number;
 }
 
-const formatShortDate = (dateStr: unknown): string => {
-  if (typeof dateStr !== 'string' || !dateStr.includes('-')) return String(dateStr ?? '');
+const formatShortDate = (dateStr: string): string => {
+  if (!dateStr.includes('-')) return dateStr;
   const [y, m, d] = dateStr.split('-').map(Number);
-  if (!y || !m || !d) return dateStr;
-  return new Date(y, m - 1, d).toLocaleString('default', {
+  return new Date(y, m - 1, d).toLocaleDateString('default', {
     month: 'short',
     day: 'numeric',
   });
@@ -27,28 +26,23 @@ const formatShortDate = (dateStr: unknown): string => {
 
 const CustomTooltip = ({ active, payload, label }: any) => {
   if (!active || !payload?.length) return null;
+
   const committed = payload.find((p: any) => p.dataKey === 'committed')?.value ?? 0;
   const reserved = payload.find((p: any) => p.dataKey === 'reserved')?.value ?? 0;
 
   return (
-    <div
-      className="rounded-xl border border-border bg-card px-4 py-3 shadow-lg text-xs space-y-1.5"
-      style={{ minWidth: 140 }}
-    >
+    <div className="rounded-xl border border-border bg-card px-4 py-3 shadow-lg text-xs space-y-1.5 min-w-[140px]">
       <p className="font-medium text-foreground mb-1">{formatShortDate(label)}</p>
       <div className="flex items-center gap-2">
         <span className="inline-block w-2 h-2 rounded-full bg-primary" />
         <span className="text-muted-foreground">Committed</span>
-        <span className="ml-auto font-mono font-medium text-foreground">{committed}</span>
+        <span className="ml-auto font-mono font-medium">{committed}</span>
       </div>
       {reserved > 0 && (
         <div className="flex items-center gap-2">
-          <span
-            className="inline-block w-2 h-2 rounded-full"
-            style={{ backgroundColor: 'rgb(var(--muted-foreground))' }}
-          />
+          <span className="inline-block w-2 h-2 rounded-full bg-muted-foreground" />
           <span className="text-muted-foreground">Reserved</span>
-          <span className="ml-auto font-mono font-medium text-foreground">{reserved}</span>
+          <span className="ml-auto font-mono font-medium">{reserved}</span>
         </div>
       )}
     </div>
@@ -56,126 +50,98 @@ const CustomTooltip = ({ active, payload, label }: any) => {
 };
 
 const UsageBarChart = ({ days, dailyLimit }: Props) => {
-  if (days.length === 0) {
-    return (
-      <p className="text-sm text-muted-foreground py-8 text-center">
-        No data for this period.
-      </p>
-    );
-  }
+  if (days.length === 0) return <p className="text-center py-12 text-muted-foreground">No data available</p>;
 
-  const maxVal = Math.max(...days.map((d) => d.committed + (d.reserved ?? 0)));
+  const maxCommitted = Math.max(...days.map(d => d.committed));
+  const maxTotal = Math.max(...days.map(d => d.committed + (d.reserved ?? 0)));
+
+  // Better scaling
+  const yMax = Math.max(
+    dailyLimit ? dailyLimit * 1.1 : 0,
+    Math.ceil(maxTotal * 1.15)
+  );
 
   return (
-    <div className="animate-fade-up animation-delay-300">
-      <ResponsiveContainer width="100%" height={240}>
+    <div className="animate-fade-up">
+      <ResponsiveContainer width="100%" height={280}>
         <BarChart
           data={days}
-          margin={{ top: 4, right: 4, left: -24, bottom: 0 }}
-          barCategoryGap="28%"
+          margin={{ top: 20, right: 12, left: 0, bottom: 8 }}
+          barCategoryGap="22%"
         >
           <XAxis
             dataKey="date"
             tickFormatter={formatShortDate}
-            tick={{
-              fontSize: 11,
-              fill: 'rgb(var(--muted-foreground))',
-              fontFamily: 'DM Sans, sans-serif',
-            }}
+            tick={{ fontSize: 11, fill: 'rgb(var(--muted-foreground))' }}
             axisLine={false}
             tickLine={false}
           />
           <YAxis
-            tick={{
-              fontSize: 11,
-              fill: 'rgb(var(--muted-foreground))',
-              fontFamily: 'DM Sans, sans-serif',
-            }}
+            tick={{ fontSize: 11, fill: 'rgb(var(--muted-foreground))' }}
             axisLine={false}
             tickLine={false}
+            domain={[0, yMax]}
             allowDecimals={false}
-            domain={[0, Math.ceil(maxVal * 1.2) || 10]}
           />
-          <Tooltip
-            content={<CustomTooltip />}
-            cursor={{
-              fill: 'rgb(var(--muted))',
-              radius: 6,
-            }}
-          />
+
+          <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgb(var(--muted))/0.6', radius: 8 }} />
+
           {dailyLimit && (
             <ReferenceLine
               y={dailyLimit}
               stroke="rgb(var(--accent))"
-              strokeDasharray="4 4"
+              strokeDasharray="3 3"
               strokeWidth={1.5}
               label={{
-                value: 'limit',
-                fontSize: 10,
-                fill: 'rgb(var(--accent))',
-                fontFamily: 'JetBrains Mono, monospace',
+                value: 'daily limit',
                 position: 'insideTopRight',
-                dy: -4,
+                fill: 'rgb(var(--accent))',
+                fontSize: 10,
+                fontFamily: 'JetBrains Mono, monospace',
+                dy: -8,
               }}
             />
           )}
-          <Bar
-            dataKey="committed"
-            stackId="a"
-            radius={[0, 0, 0, 0]}
-            maxBarSize={40}
-          >
+
+          {/* Committed bars */}
+          <Bar dataKey="committed" radius={[4, 4, 0, 0]} maxBarSize={42}>
             {days.map((day, index) => {
-              const utilization = dailyLimit
-                ? (day.committed + (day.reserved ?? 0)) / dailyLimit
-                : 0;
-              const color =
-                utilization >= 0.9
-                  ? 'rgb(var(--danger))'
-                  : utilization >= 0.7
-                  ? 'rgb(var(--warning))'
-                  : 'rgb(var(--primary))';
-              // round top corners only if no reserved bar stacked on top
-              const hasReserved = (day.reserved ?? 0) > 0;
-              return (
-                <Cell
-                  key={index}
-                  fill={color}
-                  radius={hasReserved ? 0 : 5}
-                />
-              );
+              const total = day.committed + (day.reserved ?? 0);
+              const utilization = dailyLimit ? total / dailyLimit : 0;
+
+              let fill = 'rgb(var(--primary))';
+              if (utilization >= 0.95) fill = 'rgb(var(--danger))';
+              else if (utilization >= 0.75) fill = 'rgb(var(--warning))';
+
+              return <Cell key={`committed-${index}`} fill={fill} />;
             })}
           </Bar>
+
+          {/* Reserved bars (stacked) */}
           <Bar
             dataKey="reserved"
-            stackId="a"
-            radius={[5, 5, 0, 0]}
+            stackId="usage"
             fill="rgb(var(--muted-foreground))"
-            fillOpacity={0.35}
-            maxBarSize={40}
+            fillOpacity={0.45}
+            radius={[6, 6, 0, 0]}
+            maxBarSize={42}
           />
         </BarChart>
       </ResponsiveContainer>
 
       {/* Legend */}
-      <div className="flex items-center gap-4 mt-2 px-1">
-        <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-          <span className="inline-block w-2.5 h-2.5 rounded-sm bg-primary" />
+      <div className="flex flex-wrap items-center gap-x-6 gap-y-2 mt-4 text-xs text-muted-foreground">
+        <div className="flex items-center gap-1.5">
+          <div className="w-3 h-3 rounded bg-primary" />
           Committed
         </div>
-        <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-          <span
-            className="inline-block w-2.5 h-2.5 rounded-sm"
-            style={{ backgroundColor: 'rgb(var(--muted-foreground))', opacity: 0.4 }}
-          />
+        <div className="flex items-center gap-1.5">
+          <div className="w-3 h-3 rounded" style={{ backgroundColor: 'rgb(var(--muted-foreground))', opacity: 0.45 }} />
           Reserved
         </div>
         {dailyLimit && (
-          <div className="flex items-center gap-1.5 text-xs text-muted-foreground ml-auto">
-            <span
-              className="inline-block w-4 border-t-2 border-dashed"
-              style={{ borderColor: 'rgb(var(--accent))' }}
-            />
+          <div className="flex items-center gap-1.5 ml-auto">
+            <div className="w-6 h-px border-t-2 border-dashed" style={{ borderColor: 'rgb(var(--accent))' }} />
             Daily limit
           </div>
         )}
