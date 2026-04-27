@@ -13,6 +13,9 @@ export default {
         "muted-foreground": "rgb(var(--muted-foreground) / <alpha-value>)",
         border: "rgb(var(--border) / <alpha-value>)",
         primary: "rgb(var(--primary) / <alpha-value>)",
+        danger: "rgb(var(--danger) / <alpha-value>)",
+        warning: "rgb(var(--warning) / <alpha-value>)",
+        accent: "rgb(var(--accent) / <alpha-value>)",
       },
       fontFamily: {
         display: ['"DM Serif Display"', 'Georgia', 'serif'],
