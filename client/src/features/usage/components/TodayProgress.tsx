@@ -64,7 +64,7 @@ const TodayProgress = ({ days, dailyLimit, plan }: Props) => {
         {/* Count */}
         <div className="flex items-baseline gap-1.5">
           <span
-            className="text-4xl font-normal tracking-tight"
+            className="text-3xl font-semibold tracking-tight"
             style={{ fontFamily: "'DM Serif Display', Georgia, serif" }}
           >
             {committed.toLocaleString()}
