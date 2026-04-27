@@ -82,7 +82,14 @@ const TodayProgress = ({ days, dailyLimit, plan }: Props) => {
         {/* Progress bar */}
         <Progress
           value={pct}
-          className={`h-3 ${statusColor}`}
+          className="h-3"
+          indicatorClassName={
+            pct >= 90
+              ? 'bg-[rgb(var(--danger))]'
+              : pct >= 70
+              ? 'bg-[rgb(var(--warning))]'
+              : 'bg-primary'
+          }
         />
 
         {/* Footer row */}
