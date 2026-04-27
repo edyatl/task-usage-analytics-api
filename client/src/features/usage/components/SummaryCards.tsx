@@ -79,8 +79,9 @@ const SummaryCards = ({ summary }: Props) => {
 };
 
 function formatDate(date?: string) {
-  if (!date) return '—';
+  if (!date || !date.includes('-')) return '—';
   const [y, m, d] = date.split('-').map(Number);
+  if (!y || !m || !d) return date;
   return new Date(y, m - 1, d).toLocaleString('default', {
     month: 'short',
     day: 'numeric',
