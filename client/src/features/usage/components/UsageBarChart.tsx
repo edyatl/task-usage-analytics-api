@@ -139,7 +139,7 @@ const UsageBarChart = ({ days, dailyLimit }: Props) => {
                 <Cell
                   key={index}
                   fill={color}
-                  radius={hasReserved ? [0, 0, 0, 0] : [5, 5, 0, 0]}
+                  radius={hasReserved ? 0 : 5}
                 />
               );
             })}
