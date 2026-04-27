@@ -19,7 +19,7 @@ const UsageStats = () => {
 
   return (
     <div className="min-h-screen bg-background px-4 py-8 md:py-12">
-      <div className="max-w-3xl mx-auto space-y-8">
+      <div className="max-w-4xl mx-auto space-y-10">
         {/* Page Header */}
         <header className="animate-fade-up flex items-end justify-between gap-4">
           <div>
@@ -101,7 +101,7 @@ const UsageStats = () => {
         )}
 
         {!isLoading && !isError && data && data.days.length > 0 && (
-          <>
+          <div className="space-y-10">
             {/* Today's progress */}
             <TodayProgress
               days={data.days}
@@ -110,25 +110,27 @@ const UsageStats = () => {
             />
 
             {/* Summary stat cards */}
-            <SummaryCards summary={data.summary} />
+            <div className="space-y-6">
+              <SummaryCards summary={data.summary} />
 
-            {/* Bar chart */}
-            <Card className="animate-fade-up animation-delay-400 overflow-hidden">
-              <CardContent className="space-y-2">
-                <div className="flex items-center justify-between mb-1">
-                  <h2 className="text-sm font-semibold text-foreground">
-                    Daily Breakdown
-                  </h2>
-                  <span className="text-xs font-mono text-muted-foreground">
-                    last {data.days.length}d
-                  </span>
-                </div>
-                <div className="w-full min-w-0">
-                  <UsageBarChart days={data.days} dailyLimit={data.daily_limit} />
-                </div>
-              </CardContent>
-            </Card>
-          </>
+              {/* Bar chart */}
+              <Card className="overflow-hidden">
+                <CardContent className="space-y-3">
+                  <div className="flex items-center justify-between mb-1">
+                    <h2 className="text-sm font-semibold text-foreground">
+                      Daily Breakdown
+                    </h2>
+                    <span className="text-xs font-mono text-muted-foreground">
+                      last {data.days.length}d
+                    </span>
+                  </div>
+                  <div className="w-full min-w-0">
+                    <UsageBarChart days={data.days} dailyLimit={data.daily_limit} />
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
         )}
       </div>
     </div>
