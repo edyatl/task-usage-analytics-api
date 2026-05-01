@@ -30,12 +30,6 @@ const TodayProgress = ({ days, dailyLimit, plan }: Props) => {
   const utilization = total / dailyLimit;
   const pct = Math.min(utilization * 100, 100);
 
-  const statusColor =
-    pct >= 90
-      ? '[&>div]:bg-danger'
-      : pct >= 70
-      ? '[&>div]:bg-warning'
-      : '';
 
   const remaining = Math.max(dailyLimit - total, 0);
 

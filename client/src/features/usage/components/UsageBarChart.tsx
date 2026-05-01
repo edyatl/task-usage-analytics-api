@@ -52,7 +52,6 @@ const CustomTooltip = ({ active, payload, label }: any) => {
 const UsageBarChart = ({ days, dailyLimit }: Props) => {
   if (days.length === 0) return <p className="text-center py-12 text-muted-foreground">No data available</p>;
 
-  const maxCommitted = Math.max(...days.map(d => d.committed));
   const maxTotal = Math.max(...days.map(d => d.committed + (d.reserved ?? 0)));
 
   // Better scaling
