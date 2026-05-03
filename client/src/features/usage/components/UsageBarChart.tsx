@@ -34,7 +34,7 @@ const CustomTooltip = ({ active, payload, label }: any) => {
     <div className="rounded-xl border border-border bg-card px-4 py-3 shadow-lg text-xs space-y-1.5 min-w-[140px]">
       <p className="font-medium text-foreground mb-1">{formatShortDate(label)}</p>
       <div className="flex items-center gap-2">
-        <span className="inline-block w-2 h-2 rounded-full bg-primary" />
+        <span className="inline-block w-2 h-2 rounded-full bg-danger" />
         <span className="text-muted-foreground">Committed</span>
         <span className="ml-auto font-mono font-medium">{committed}</span>
       </div>
@@ -103,18 +103,11 @@ const UsageBarChart = ({ days, dailyLimit }: Props) => {
           )}
 
           {/* Committed bars */}
-          <Bar dataKey="committed" radius={[4, 4, 0, 0]} maxBarSize={42}>
-            {days.map((day, index) => {
-              const total = day.committed + (day.reserved ?? 0);
-              const utilization = dailyLimit ? total / dailyLimit : 0;
-
-              let fill = 'rgb(var(--primary))';
-              if (utilization >= 0.95) fill = 'rgb(var(--danger))';
-              else if (utilization >= 0.75) fill = 'rgb(var(--warning))';
-
-              return <Cell key={`committed-${index}`} fill={fill} />;
-            })}
-          </Bar>
+        <Bar dataKey="committed" radius={[4, 4, 0, 0]} maxBarSize={42}>
+          {days.map((_, index) => (
+            <Cell key={`committed-${index}`} fill="rgb(var(--danger))" />
+          ))}
+        </Bar>
 
           {/* Reserved bars (stacked) */}
           <Bar
@@ -131,7 +124,7 @@ const UsageBarChart = ({ days, dailyLimit }: Props) => {
       {/* Legend */}
       <div className="flex flex-wrap items-center gap-x-6 gap-y-2 mt-4 text-xs text-muted-foreground">
         <div className="flex items-center gap-1.5">
-          <div className="w-3 h-3 rounded bg-primary" />
+          <div className="w-3 h-3 rounded bg-danger" />
           Committed
         </div>
         <div className="flex items-center gap-1.5">
