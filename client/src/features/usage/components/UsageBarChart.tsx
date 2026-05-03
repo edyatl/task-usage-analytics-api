@@ -91,14 +91,18 @@ const UsageBarChart = ({ days, dailyLimit }: Props) => {
               stroke="rgb(var(--accent))"
               strokeDasharray="3 3"
               strokeWidth={1.5}
-              label={{
-                value: 'daily limit',
-                position: 'insideTopRight',
-                fill: 'rgb(var(--accent))',
-                fontSize: 10,
-                fontFamily: 'JetBrains Mono, monospace',
-                dy: -8,
-              }}
+              label={({ viewBox }) => (
+                <text
+                  x={viewBox.x + viewBox.width - 4}
+                  y={viewBox.y - 6}
+                  fill="rgb(var(--accent))"
+                  fontSize={10}
+                  fontFamily="JetBrains Mono, monospace"
+                  textAnchor="end"
+                >
+                  daily limit
+                </text>
+              )}
             />
           )}
 
