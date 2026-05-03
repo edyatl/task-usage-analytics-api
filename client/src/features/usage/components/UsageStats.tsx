@@ -62,7 +62,7 @@ const UsageStats = () => {
             <span className="capitalize">{data.plan} Plan</span>
             <span className="text-border">•</span>
             <span>{data.daily_limit} requests / day</span>
-            {data.period && (
+            {data.period?.from && data.period?.to && (
               <>
                 <span className="text-border">•</span>
                 <span>
@@ -120,6 +120,7 @@ const UsageStats = () => {
 function formatPeriod(dateStr?: string) {
   if (!dateStr) return '';
   const date = new Date(dateStr);
+  if (isNaN(date.getTime())) return '';
   return date.toLocaleDateString('default', { month: 'short', day: 'numeric' });
 }
 
