@@ -21,8 +21,8 @@ export interface UsageSummary {
 }
 
 export interface UsagePeriod {
-  from: string;
-  to: string;
+  from_date: string;
+  to_date: string;
 }
 
 export interface UsageStatsResponse {

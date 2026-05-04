@@ -62,11 +62,11 @@ const UsageStats = () => {
             <span className="capitalize">{data.plan} Plan</span>
             <span className="text-border">•</span>
             <span>{data.daily_limit} requests / day</span>
-            {data.period?.from && data.period?.to && (
+            {data.period?.from_date && data.period?.to_date && (
               <>
                 <span className="text-border">•</span>
                 <span>
-                  {formatPeriod(data.period.from)} — {formatPeriod(data.period.to)}
+                  {formatPeriod(data.period.from_date)} — {formatPeriod(data.period.to_date)}
                 </span>
               </>
             )}
