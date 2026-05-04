@@ -26,12 +26,12 @@ const TodayProgress = ({ days, dailyLimit, plan }: Props) => {
 
   const committed = today?.committed ?? 0;
   const reserved = today?.reserved ?? 0;
-  const total = committed + reserved;
-  const utilization = total / dailyLimit;
+  //const total = committed + reserved;
+  const utilization = committed / dailyLimit;
   const pct = Math.min(utilization * 100, 100);
 
 
-  const remaining = Math.max(dailyLimit - total, 0);
+  const remaining = Math.max(dailyLimit - committed, 0);
 
   return (
     <Card className="animate-fade-up animation-delay-500">
