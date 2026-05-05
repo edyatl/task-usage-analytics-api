@@ -45,7 +45,8 @@ const TodayProgress = ({ days, dailyLimit, plan }: Props) => {
                 weekday: 'long',
                 month: 'long',
                 day: 'numeric',
-              })}
+                timeZone: 'UTC',
+              })} (UTC)
             </p>
           </div>
           <span
