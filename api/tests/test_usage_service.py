@@ -7,7 +7,7 @@
 """
 import pytest
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
-from datetime import date, datetime, timedelta
+from datetime import UTC, date, datetime, timedelta
 from types import SimpleNamespace
 
 import pytest_asyncio
@@ -193,6 +193,80 @@ class TestUsageService:
                 assert day.utilization == 0.0
 
     @pytest.mark.asyncio
+    async def test_day_with_no_activity_returns_zero_committed_and_reserved(self, mock_session):
+        user_id = 1
+        daily_limit = 10
+        target_date = date(2024, 1, 1)
+
+        agg_result = MagicMock()
+        agg_result.all.return_value = [
+            _make_row(target_date, committed=0, reserved=0),
+        ]
+        mock_session.execute.return_value = agg_result
+
+        usage_service = UsageService()
+        days_list = await usage_service._fetch_daily_stats(
+            user_id=user_id,
+            date_from=target_date,
+            date_to=target_date,
+            daily_limit=daily_limit,
+            session=mock_session,
+        )
+
+        assert len(days_list) == 1
+        day = days_list[0]
+        assert day.committed == 0, f"Expected committed=0, got {day.committed}"
+        assert day.reserved == 0, f"Expected reserved=0, got {day.reserved}"
+        assert day.utilization == pytest.approx(0.0, abs=1e-4)
+
+    @pytest.mark.asyncio
+    async def test_day_with_no_db_rows_returns_zero_committed_and_reserved(
+        self, mock_session
+    ):
+        """
+        Regression test: LEFT JOIN ghost rows have committed_at IS NULL,
+        which an unguarded CASE incorrectly counts as reserved=1.
+        The fix guards on user_id IS NOT NULL before counting.
+        """
+        user_id = 1
+        daily_limit = 10
+        target_date = date(2024, 6, 1)
+
+        # Simulate what the DB actually returns for a day with NO events:
+        # the LEFT JOIN produces a ghost row where all DailyUsageEvents
+        # columns are NULL — so committed=0, reserved=0 AFTER the fix,
+        # but committed=0, reserved=1 BEFORE the fix.
+        ghost_row = SimpleNamespace(day=target_date, committed=0, reserved=0)
+
+        agg_result = MagicMock()
+        agg_result.all.return_value = [ghost_row]
+        mock_session.execute.return_value = agg_result
+
+        usage_service = UsageService()
+        days_list = await usage_service._fetch_daily_stats(
+            user_id=user_id,
+            date_from=target_date,
+            date_to=target_date,
+            daily_limit=daily_limit,
+            session=mock_session,
+        )
+
+        assert len(days_list) == 1
+        day = days_list[0]
+
+        # Both must be zero — a ghost row must never be counted as reserved
+        assert day.committed == 0, (
+            f"Ghost row counted as committed (got {day.committed}); "
+            "check user_id IS NOT NULL guard in committed_expr"
+        )
+        assert day.reserved == 0, (
+            f"Ghost row counted as reserved (got {day.reserved}); "
+            "committed_at IS NULL matches NULL ghost rows — "
+            "add user_id IS NOT NULL guard to reserved_expr"
+        )
+        assert day.utilization == pytest.approx(0.0, abs=1e-4)
+
+    @pytest.mark.asyncio
     async def test_days_parameter_validation_and_clamping(self, mock_session):
         """days=None defaults to 7; days=0 clamps to 1; days=91 clamps to 90."""
         user_id = 1
@@ -208,20 +282,21 @@ class TestUsageService:
             r.all.return_value = rows
             return r
 
+        # Use UTC date to match the service's datetime.now(UTC).date() call
+        today = datetime.now(UTC).date()
+
         # 3 get_usage_stats calls × 2 execute calls each = 6 side_effect entries
         mock_session.execute.side_effect = [
             # call 1: days=None  → 7-day window, 1 representative row
             _user_result(),
-            _agg_result([_make_row(date.today() - timedelta(days=6), committed=0, reserved=0)]),
+            _agg_result([_make_row(today - timedelta(days=6), committed=0, reserved=0)]),
             # call 2: days=0 → clamped to 1, single-day window
             _user_result(),
-            _agg_result([_make_row(date.today(), committed=0, reserved=0)]),
+            _agg_result([_make_row(today, committed=0, reserved=0)]),
             # call 3: days=91 → clamped to 90
             _user_result(),
-            _agg_result([_make_row(date.today() - timedelta(days=89), committed=0, reserved=0)]),
+            _agg_result([_make_row(today - timedelta(days=89), committed=0, reserved=0)]),
         ]
-
-        today = date.today()
 
         with patch(
             "api.usage.service.settings",
@@ -249,3 +324,4 @@ class TestUsageService:
             )
             assert stats.period.to_date == str(today)
             assert stats.period.from_date == str(today - timedelta(days=89))
+
