@@ -141,7 +141,13 @@ class UsageService:
         committed_expr = func.coalesce(
             func.sum(
                 sa.case(
-                    (DailyUsageEvents.committed_at.is_not(None), 1),
+                    (
+                        sa.and_(
+                            DailyUsageEvents.user_id.is_not(None),   # real row, not a ghost
+                            DailyUsageEvents.committed_at.is_not(None),
+                        ),
+                        1,
+                    ),
                     else_=0,
                 )
             ),
@@ -151,7 +157,13 @@ class UsageService:
         reserved_expr = func.coalesce(
             func.sum(
                 sa.case(
-                    (DailyUsageEvents.committed_at.is_(None), 1),
+                    (
+                        sa.and_(
+                            DailyUsageEvents.user_id.is_not(None),   # real row, not a ghost
+                            DailyUsageEvents.committed_at.is_(None),
+                        ),
+                        1,
+                    ),
                     else_=0,
                 )
             ),
