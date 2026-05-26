@@ -103,7 +103,6 @@ class UsageService:
         daily_limit: int = settings.TARIFF_MAP.get(plan_tier, _DEFAULT_DAILY_LIMIT)
         return plan_tier, daily_limit
 
-
     async def _fetch_daily_stats(
         self,
         *,
@@ -113,15 +112,45 @@ class UsageService:
         daily_limit: int,
         session: AsyncSession,
     ) -> list[DayStats]:
-        """Single aggregation query; every calendar day in [date_from, date_to]
-        is represented via a generate_series CTE.
+        """Fetch and transform daily usage statistics.
 
-        date_key is VARCHAR('YYYY-MM-DD') in the DB, so we cast the
-        timestamptz produced by generate_series → DATE → TEXT before joining.
+        Args:
+            user_id:     Primary key of the user.
+            date_from:   Start date (inclusive).
+            date_to:     End date (inclusive).
+            daily_limit: Daily limit for the user.
+            session:     Injected async DB session.
+
+        Returns:
+            A list of DayStats for the given date range.
         """
-        # generate_series returns timestamptz when fed DATE + INTERVAL.
-        # Cast explicitly to DATE inside the CTE so the spine column is typed
-        # correctly for all downstream references.
+        query = self._build_daily_stats_query(
+            user_id=user_id,
+            date_from=date_from,
+            date_to=date_to,
+        )
+
+        rows = (await session.execute(query)).all()
+
+        return self._transform_daily_stats_rows(rows, daily_limit)
+
+    def _build_daily_stats_query(
+        self,
+        *,
+        user_id: int,
+        date_from: date,
+        date_to: date,
+    ) -> sa.Select:
+        """Build the SQL query for daily usage statistics.
+
+        Args:
+            user_id:   Primary key of the user.
+            date_from: Start date (inclusive).
+            date_to:   End date (inclusive).
+
+        Returns:
+            A SQLAlchemy query object.
+        """
         date_spine = (
             sa.select(
                 sa.cast(
@@ -130,20 +159,40 @@ class UsageService:
                         sa.cast(date_to, sa.Date),
                         sa.cast(sa.literal("1 day"), sa.Interval),
                     ),
-                    sa.Date,                      # timestamptz → date
+                    sa.Date,
                 ).label("day")
             ).cte("date_spine")
         )
 
-        # date_key is VARCHAR; cast the DATE spine value to TEXT for the join.
         date_key_expr = sa.cast(date_spine.c.day, sa.String)
 
-        committed_expr = func.coalesce(
+        committed_expr = self._committed_expr()
+        reserved_expr = self._reserved_expr()
+
+        query = (
+            sa.select(date_spine.c.day, committed_expr, reserved_expr)
+            .select_from(date_spine)
+            .outerjoin(
+                DailyUsageEvents,
+                sa.and_(
+                    DailyUsageEvents.date_key == date_key_expr,
+                    DailyUsageEvents.user_id == user_id,
+                ),
+            )
+            .group_by(date_spine.c.day)
+            .order_by(date_spine.c.day)
+        )
+
+        return query
+
+    def _committed_expr(self) -> sa.ColumnElement:
+        """Expression for committed events."""
+        return func.coalesce(
             func.sum(
                 sa.case(
                     (
                         sa.and_(
-                            DailyUsageEvents.user_id.is_not(None),   # real row, not a ghost
+                            DailyUsageEvents.user_id.is_not(None),
                             DailyUsageEvents.committed_at.is_not(None),
                         ),
                         1,
@@ -154,12 +203,14 @@ class UsageService:
             0,
         ).label("committed")
 
-        reserved_expr = func.coalesce(
+    def _reserved_expr(self) -> sa.ColumnElement:
+        """Expression for reserved events."""
+        return func.coalesce(
             func.sum(
                 sa.case(
                     (
                         sa.and_(
-                            DailyUsageEvents.user_id.is_not(None),   # real row, not a ghost
+                            DailyUsageEvents.user_id.is_not(None),
                             DailyUsageEvents.committed_at.is_(None),
                         ),
                         1,
@@ -170,36 +221,31 @@ class UsageService:
             0,
         ).label("reserved")
 
-        query = (
-            sa.select(date_spine.c.day, committed_expr, reserved_expr)
-            .select_from(date_spine)
-            .outerjoin(
-                DailyUsageEvents,
-                sa.and_(
-                    DailyUsageEvents.date_key == date_key_expr,   # VARCHAR = TEXT 
-                    DailyUsageEvents.user_id == user_id,
-                ),
-            )
-            .group_by(date_spine.c.day)
-            .order_by(date_spine.c.day)
-        )
+    @staticmethod
+    def _transform_daily_stats_rows(
+        rows: list[tuple[date, int, int]], daily_limit: int
+    ) -> list[DayStats]:
+        """Transform raw query rows into DayStats.
 
-        rows = (await session.execute(query)).all()
+        Args:
+            rows:        Raw query rows.
+            daily_limit: Daily limit for the user.
 
+        Returns:
+            A list of DayStats.
+        """
         return [
             DayStats(
-                date=str(row.day),          # date object → 'YYYY-MM-DD'
-                committed=row.committed,
-                reserved=row.reserved,
+                date=str(row[0]),  # date object → 'YYYY-MM-DD'
+                committed=row[1],
+                reserved=row[2],
                 limit=daily_limit,
                 utilization=(
-                    0.0 if daily_limit == 0
-                    else round(row.committed / daily_limit, 4)
+                    0.0 if daily_limit == 0 else round(row[1] / daily_limit, 4)
                 ),
             )
             for row in rows
         ]
-
 
     @staticmethod
     def _compute_summary(days_list: list[DayStats], window: int) -> SummaryStats:
