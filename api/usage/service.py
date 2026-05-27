@@ -236,12 +236,12 @@ class UsageService:
         """
         return [
             DayStats(
-                date=str(row[0]),  # date object → 'YYYY-MM-DD'
-                committed=row[1],
-                reserved=row[2],
+                date=str(row.day),  # date object → 'YYYY-MM-DD'
+                committed=row.committed,
+                reserved=row.reserved,
                 limit=daily_limit,
                 utilization=(
-                    0.0 if daily_limit == 0 else round(row[1] / daily_limit, 4)
+                    0.0 if daily_limit == 0 else round(row.committed / daily_limit, 4)
                 ),
             )
             for row in rows
