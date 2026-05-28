@@ -7,6 +7,7 @@
 """
 from fastapi import APIRouter, Depends, HTTPException, Response, status
 from fastapi.responses import JSONResponse
+from typing import Any  # Import Any type
 
 from api.auth.schemas import LoginRequest, TokenResponse
 from api.auth.service import ACCESS_TOKEN_TTL_SECONDS, AuthService
