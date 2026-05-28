@@ -32,3 +32,8 @@ export interface UsageStatsResponse {
   days: UsageDay[];
   summary: UsageSummary;
 }
+
+export interface LoginPayload {
+  email: string;
+  password: string;
+}
