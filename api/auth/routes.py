@@ -5,11 +5,12 @@
     https://github.com/edyatl
 
 """
-from fastapi import APIRouter, HTTPException, Response, status
+from fastapi import APIRouter, Depends, HTTPException, Response, status
 from fastapi.responses import JSONResponse
 
 from api.auth.schemas import LoginRequest, TokenResponse
 from api.auth.service import ACCESS_TOKEN_TTL_SECONDS, AuthService
+from api.auth.dependencies import get_current_user
 
 auth_router = APIRouter()
 
@@ -61,3 +62,8 @@ async def logout() -> Response:
     response = JSONResponse(content={"message": "Logged out successfully"})
     _clear_auth_cookie(response)
     return response
+
+
+@auth_router.get("/me", response_model=dict[str, str])
+async def get_me(user: dict[str, Any] = Depends(get_current_user)):
+    return AuthService.get_me(user)

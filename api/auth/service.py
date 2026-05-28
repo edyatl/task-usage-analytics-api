@@ -61,3 +61,7 @@ class AuthService:
         email_ok = hmac.compare_digest(email.lower(), _DEMO_EMAIL)
         pass_ok = hmac.compare_digest(password, _DEMO_PASSWORD)
         return _DEMO_USER.copy() if (email_ok and pass_ok) else None
+
+    @staticmethod
+    def get_me(user: dict[str, Any]) -> dict[str, str]:
+        return {"email": user["sub"]}
